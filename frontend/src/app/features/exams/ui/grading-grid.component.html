@@ -59,8 +59,10 @@
       <tbody>
         <tr class="section-row">
           <th scope="colgroup" [attr.colspan]="columns().length + 1">
-            <span class="kanji" aria-hidden="true">{{ vm.section.kanji }}</span>
-            {{ vm.section.title }}
+            <span class="section-title">
+              <span class="kanji" aria-hidden="true">{{ vm.section.kanji }}</span>
+              {{ vm.section.title }}
+            </span>
           </th>
         </tr>
         @for (row of vm.rows; track row.item.id) {
