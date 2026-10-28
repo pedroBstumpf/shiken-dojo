@@ -23,6 +23,7 @@ import {
   noopBreachedPasswordChecker,
 } from './modules/auth/breached-passwords.js';
 import { healthRoutes } from './modules/health/health.routes.js';
+import { StudentsService } from './modules/students/students.service.js';
 import { errorHandler, notFoundHandler } from './shared/http/error-handler.js';
 import { registerOpenApi } from './shared/http/openapi.js';
 import securityPlugin from './shared/http/security.plugin.js';
@@ -77,6 +78,7 @@ export async function buildApp(deps: AppDependencies): Promise<App> {
     : noopBreachedPasswordChecker;
   const services = {
     auth: new AuthService(deps.pool, config.session, breachedPasswords),
+    students: new StudentsService(deps.pool),
   };
 
   await app.register(healthRoutes, { isReady: () => isDatabaseReady(deps.pool) });

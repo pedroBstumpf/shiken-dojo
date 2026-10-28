@@ -1,15 +1,23 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import { requireAuth } from './modules/auth/auth.guard.js';
 import type { AuthService } from './modules/auth/auth.service.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
+import { studentRoutes } from './modules/students/students.routes.js';
+import type { StudentsService } from './modules/students/students.service.js';
 import type { CookieSettings } from './shared/http/cookies.js';
 import csrfPlugin from './shared/http/csrf.plugin.js';
+
+export interface ApiServices {
+  readonly auth: AuthService;
+  readonly students: StudentsService;
+}
 
 export interface ApiOptions {
   /** Publica /api/v1/openapi.json (desligado em produção para não expor o inventário da API). */
   readonly exposeOpenApi: boolean;
   readonly csrfSecret: string;
   readonly cookies: CookieSettings;
-  readonly services: { readonly auth: AuthService };
+  readonly services: ApiServices;
 }
 
 /** Tudo o que fica sob /api/v1. */
@@ -23,4 +31,11 @@ export const api: FastifyPluginAsyncZod<ApiOptions> = async (app, options) => {
   app.decorateRequest('auth', null);
   await app.register(csrfPlugin, { secret: options.csrfSecret, cookies });
   await app.register(authRoutes, { service: services.auth, cookies });
+
+  // Daqui para baixo, tudo exige sessão válida. Negar por padrão (BACKEND.md §1).
+  const protectedApi: FastifyPluginAsyncZod = async (scope) => {
+    scope.addHook('onRequest', requireAuth(services.auth, cookies));
+    await scope.register(studentRoutes, { service: services.students });
+  };
+  await app.register(protectedApi);
 };
