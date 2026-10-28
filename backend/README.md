@@ -28,15 +28,15 @@ O cluster local fica em `.local/` (ignorado pelo Git). Depois de reiniciar o com
 
 ## Comandos
 
-| Comando | O que faz |
-|---|---|
-| `npm run dev` | API com recarga automática |
-| `npm test` | Testes (unitários e de API contra o banco `shiken_dojo_test`) |
-| `npm run lint` · `npm run typecheck` | ESLint · TypeScript |
-| `npm run build` · `npm start` | Build para `dist/` · roda o build |
-| `npm run db:setup` / `db:start` / `db:stop` / `db:status` | PostgreSQL local de desenvolvimento |
-| `npm run db:migrate` | Aplica migrações pendentes (papel `app_migrator`) |
-| `npm run db:seed` | Dados fictícios de demonstração (recusa rodar em produção) |
+| Comando                                                                    | O que faz                                                                      |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `npm run dev`                                                              | API com recarga automática                                                     |
+| `npm test`                                                                 | Testes (unitários e de API contra o banco `shiken_dojo_test`)                  |
+| `npm run lint` · `npm run typecheck`                                       | ESLint · TypeScript                                                            |
+| `npm run build` · `npm start`                                              | Build para `dist/` · roda o build                                              |
+| `npm run db:setup` / `db:start` / `db:stop` / `db:status`                  | PostgreSQL local de desenvolvimento                                            |
+| `npm run db:migrate`                                                       | Aplica migrações pendentes (papel `app_migrator`)                              |
+| `npm run db:seed`                                                          | Dados fictícios de demonstração (recusa rodar em produção)                     |
 | `npm run bootstrap -- --dojo "Nome" --name "Nome completo" --email e@mail` | Cria um dojo e o primeiro sensei responsável, que recebe um convite por e-mail |
 
 O contrato OpenAPI 3.1 fica em `http://localhost:3000/api/v1/openapi.json` (fora de produção).
@@ -73,7 +73,7 @@ transações) e **repository** (SQL parametrizado, sempre filtrado pelo `dojo_id
 
 - Sessão no servidor com cookie `HttpOnly` + `SameSite=Lax` (`__Host-` e `Secure` com HTTPS);
   senhas com Argon2id; bloqueio progressivo e rate limit no login.
-- CSRF por *double submit* assinado (`XSRF-TOKEN` → `X-XSRF-TOKEN`), compatível com o Angular.
+- CSRF por _double submit_ assinado (`XSRF-TOKEN` → `X-XSRF-TOKEN`), compatível com o Angular.
 - Autorização por dojo em todas as consultas (outro dojo → `404`) e por papel (`403`).
 - Dois papéis no banco: `app_migrator` (schema) e `app_runtime` (só DML; auditoria append-only).
 - Provas finalizadas imutáveis também no banco (trigger).
