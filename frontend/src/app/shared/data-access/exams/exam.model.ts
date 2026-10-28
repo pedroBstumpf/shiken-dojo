@@ -49,7 +49,8 @@ export interface Exam {
   readonly sections: readonly ExamSection[];
   readonly date: Date;
   readonly location: string;
-  readonly examinerId: string;
+  /** null se o professor examinador foi excluído. */
+  readonly examinerId: string | null;
   /** Retrato do nome do examinador no dia da prova. */
   readonly examinerName: string;
   readonly passingGrade: number;

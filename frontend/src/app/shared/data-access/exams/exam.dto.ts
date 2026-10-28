@@ -17,7 +17,8 @@ export interface ExamDto {
   /** yyyy-MM-dd */
   readonly date: string;
   readonly location: string;
-  readonly examinerId: string;
+  /** null se o professor examinador foi excluído; examinerName continua no histórico. */
+  readonly examinerId: string | null;
   readonly examinerName: string;
   readonly passingGrade: number;
   readonly notes: string;
