@@ -19,7 +19,9 @@
     "db:start": "tsx scripts/dev-db.ts start",
     "db:stop": "tsx scripts/dev-db.ts stop",
     "db:status": "tsx scripts/dev-db.ts status",
-    "db:migrate": "tsx --env-file-if-exists=.env src/cli/migrate.ts"
+    "db:migrate": "tsx --env-file-if-exists=.env src/cli/migrate.ts",
+    "db:seed": "tsx --env-file-if-exists=.env src/cli/seed.ts",
+    "bootstrap": "tsx --env-file-if-exists=.env src/cli/bootstrap.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.5",

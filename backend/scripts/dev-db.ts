@@ -212,6 +212,8 @@ function writeEnv(credentials: Credentials): void {
     TEST_DATABASE_URL: url('app_runtime', credentials.runtime, 'shiken_dojo_test'),
     TEST_MIGRATION_DATABASE_URL: url('app_migrator', credentials.migrator, 'shiken_dojo_test'),
     CSRF_SECRET: randomBytes(48).toString('base64url'),
+    // Senha dos professores de demonstração criados por `npm run db:seed`.
+    SEED_PASSWORD: randomBytes(9).toString('base64url'),
   };
   if (!existsSync(ENV_FILE)) {
     writeFileSync(ENV_FILE, readFileSync(ENV_EXAMPLE_FILE, 'utf8'), { mode: 0o600 });
