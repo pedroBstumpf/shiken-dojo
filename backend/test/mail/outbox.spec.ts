@@ -1,41 +1,44 @@
-import type { FastifyBaseLogger } from 'fastify';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { randomUUID } from 'node:crypto';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { enqueueEmail } from '../../src/infra/mail/outbox.repository.js';
 import {
   MAX_ATTEMPTS,
   OutboxWorker,
   retryDelaySeconds,
 } from '../../src/infra/mail/outbox-worker.js';
-import { createTestApp, type TestContext } from '../support/app.js';
+import { createTestApp, silentLogger, type TestContext } from '../support/app.js';
 import { createDojo } from '../support/factories.js';
 
 let ctx: TestContext;
 let worker: OutboxWorker;
 
-const silentLog = {
-  info: () => undefined,
-  warn: () => undefined,
-  error: () => undefined,
-} as unknown as FastifyBaseLogger;
-
 beforeAll(async () => {
   ctx = await createTestApp();
-  worker = new OutboxWorker(ctx.pool, ctx.mailer, silentLog);
+  worker = new OutboxWorker(ctx.pool, ctx.mailer, silentLogger);
 });
 
 afterAll(async () => {
   await ctx.close();
 });
 
+// O banco de testes é compartilhado: esvazia a fila antes de cada cenário.
+beforeEach(async () => {
+  ctx.mailer.failNext = 0;
+  while ((await worker.runOnce()) > 0);
+});
+
+let recipient = '';
+
 async function enqueue(): Promise<string> {
   const dojoId = await createDojo(ctx.pool);
+  recipient = `sensei-${randomUUID()}@dojo.test`;
   const { id } = await enqueueEmail(ctx.pool, {
     dojoId,
     kind: 'exam.pdf',
     requestedBy: null,
     recipientTeacherId: null,
     message: {
-      to: 'sensei@dojo.test',
+      to: recipient,
       subject: 'Prova',
       text: 'Segue a prova.',
       html: null,
@@ -69,7 +72,7 @@ describe('outbox de e-mails', () => {
 
     await worker.runOnce();
 
-    expect(ctx.mailer.sent.at(-1)).toMatchObject({ to: 'sensei@dojo.test', subject: 'Prova' });
+    expect(ctx.mailer.sent.at(-1)).toMatchObject({ to: recipient, subject: 'Prova' });
     expect(await row(id)).toMatchObject({
       status: 'sent',
       attempts: 1,

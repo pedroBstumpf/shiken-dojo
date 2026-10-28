@@ -1,8 +1,10 @@
+import type { FastifyBaseLogger } from 'fastify';
 import pg from 'pg';
 import { type App, buildApp } from '../../src/app.js';
 import { loadConfig } from '../../src/config/env.js';
 import { createPool } from '../../src/infra/db/pool.js';
 import type { MailMessage, Mailer } from '../../src/infra/mail/mailer.js';
+import { OutboxWorker } from '../../src/infra/mail/outbox-worker.js';
 import { requireEnv } from './env.js';
 
 /** Mailer de teste: guarda as mensagens em memória em vez de enviar. */
@@ -54,4 +56,16 @@ export async function createTestApp(env: NodeJS.ProcessEnv = {}): Promise<TestCo
 /** Conexão com o papel dono do schema, para preparar cenários que a API não permite. */
 export function migratorClient(): pg.Client {
   return new pg.Client({ connectionString: requireEnv('TEST_MIGRATION_DATABASE_URL') });
+}
+
+const noop = () => undefined;
+export const silentLogger = {
+  info: noop,
+  warn: noop,
+  error: noop,
+} as unknown as FastifyBaseLogger;
+
+/** Roda o worker da outbox uma vez: os e-mails pendentes vão para o FakeMailer. */
+export async function deliverEmails(ctx: TestContext): Promise<void> {
+  await new OutboxWorker(ctx.pool, ctx.mailer, silentLogger).runOnce();
 }

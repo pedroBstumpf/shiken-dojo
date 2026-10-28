@@ -25,6 +25,7 @@ import {
 } from './modules/auth/breached-passwords.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { StudentsService } from './modules/students/students.service.js';
+import { TeachersService } from './modules/teachers/teachers.service.js';
 import { errorHandler, notFoundHandler } from './shared/http/error-handler.js';
 import { registerOpenApi } from './shared/http/openapi.js';
 import securityPlugin from './shared/http/security.plugin.js';
@@ -81,6 +82,7 @@ export async function buildApp(deps: AppDependencies): Promise<App> {
   const services = {
     auth: new AuthService(deps.pool, config.session, breachedPasswords),
     students: new StudentsService(deps.pool),
+    teachers: new TeachersService(deps.pool, config.appBaseUrl),
   };
 
   await app.register(healthRoutes, { isReady: () => isDatabaseReady(deps.pool) });

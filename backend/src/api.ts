@@ -4,12 +4,15 @@ import type { AuthService } from './modules/auth/auth.service.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { studentRoutes } from './modules/students/students.routes.js';
 import type { StudentsService } from './modules/students/students.service.js';
+import { teacherRoutes } from './modules/teachers/teachers.routes.js';
+import type { TeachersService } from './modules/teachers/teachers.service.js';
 import type { CookieSettings } from './shared/http/cookies.js';
 import csrfPlugin from './shared/http/csrf.plugin.js';
 
 export interface ApiServices {
   readonly auth: AuthService;
   readonly students: StudentsService;
+  readonly teachers: TeachersService;
 }
 
 export interface ApiOptions {
@@ -35,6 +38,7 @@ export const api: FastifyPluginAsyncZod<ApiOptions> = async (app, options) => {
   // Daqui para baixo, tudo exige sessão válida. Negar por padrão (BACKEND.md §1).
   const protectedApi: FastifyPluginAsyncZod = async (scope) => {
     scope.addHook('onRequest', requireAuth(services.auth, cookies));
+    await scope.register(teacherRoutes, { service: services.teachers });
     await scope.register(studentRoutes, { service: services.students });
   };
   await app.register(protectedApi);
