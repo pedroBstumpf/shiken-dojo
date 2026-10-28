@@ -12,7 +12,9 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
+import type pg from 'pg';
 import type { AppConfig } from './config/env.js';
+import { isDatabaseReady } from './infra/db/pool.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { errorHandler, notFoundHandler } from './shared/http/error-handler.js';
 import securityPlugin from './shared/http/security.plugin.js';
@@ -28,7 +30,7 @@ export type App = FastifyInstance<
 
 export interface AppDependencies {
   readonly config: AppConfig;
-  readonly isReady: () => Promise<boolean>;
+  readonly pool: pg.Pool;
 }
 
 /** Limite de corpo JSON. Uploads (multipart) têm limites próprios por rota. */
@@ -59,7 +61,7 @@ export async function buildApp(deps: AppDependencies): Promise<App> {
     globalRateLimitPerMinute: config.globalRateLimitPerMinute,
   });
 
-  await app.register(healthRoutes, { isReady: deps.isReady });
+  await app.register(healthRoutes, { isReady: () => isDatabaseReady(deps.pool) });
 
   return app;
 }

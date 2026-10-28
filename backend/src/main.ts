@@ -1,9 +1,18 @@
 import { buildApp } from './app.js';
 import { ConfigError, loadConfig } from './config/env.js';
+import { createPool } from './infra/db/pool.js';
 
 async function main(): Promise<void> {
   const config = loadConfig();
-  const app = await buildApp({ config, isReady: async () => true });
+  const pool = createPool({
+    connectionString: config.databaseUrl,
+    applicationName: 'shiken-dojo-api',
+  });
+  const app = await buildApp({ config, pool });
+  pool.on('error', (error) => app.log.error({ err: error }, 'Erro em conexão ociosa do banco'));
+  app.addHook('onClose', async () => {
+    await pool.end();
+  });
 
   // Desligamento gracioso: para de aceitar conexões, termina as requisições em andamento
   // e só então libera os recursos (BACKEND.md §15).

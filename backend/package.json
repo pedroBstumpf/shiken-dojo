@@ -18,7 +18,8 @@
     "db:setup": "tsx scripts/dev-db.ts setup",
     "db:start": "tsx scripts/dev-db.ts start",
     "db:stop": "tsx scripts/dev-db.ts stop",
-    "db:status": "tsx scripts/dev-db.ts status"
+    "db:status": "tsx scripts/dev-db.ts status",
+    "db:migrate": "tsx --env-file-if-exists=.env src/cli/migrate.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.1",

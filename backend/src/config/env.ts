@@ -22,6 +22,8 @@ const envSchema = z.object({
     )
     .pipe(z.array(z.url({ protocol: /^https?$/ }))),
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(10).default(300),
+  /** Conexão da API: papel com apenas SELECT/INSERT/UPDATE/DELETE. */
+  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/, error: 'Informe uma URL postgres://' }),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -36,6 +38,7 @@ export interface AppConfig {
   readonly trustProxyHops: number;
   readonly corsOrigins: readonly string[];
   readonly globalRateLimitPerMinute: number;
+  readonly databaseUrl: string;
 }
 
 export class ConfigError extends Error {
@@ -63,5 +66,6 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     trustProxyHops: env.TRUST_PROXY_HOPS,
     corsOrigins: env.CORS_ORIGINS,
     globalRateLimitPerMinute: env.RATE_LIMIT_PER_MINUTE,
+    databaseUrl: env.DATABASE_URL,
   };
 }

@@ -191,16 +191,8 @@ async function createRolesAndDatabases(credentials: Credentials): Promise<void> 
 
   for (const database of DATABASES) {
     await withSuperuser(database, credentials, async (client) => {
-      await client.query(`
-        REVOKE ALL ON SCHEMA public FROM PUBLIC;
-        GRANT USAGE ON SCHEMA public TO app_runtime;
-        ALTER DEFAULT PRIVILEGES FOR ROLE app_migrator IN SCHEMA public
-          GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_runtime;
-        ALTER DEFAULT PRIVILEGES FOR ROLE app_migrator IN SCHEMA public
-          GRANT USAGE, SELECT ON SEQUENCES TO app_runtime;
-        ALTER DEFAULT PRIVILEGES FOR ROLE app_migrator IN SCHEMA public
-          GRANT EXECUTE ON FUNCTIONS TO app_runtime;
-      `);
+      // As permissões de cada tabela são concedidas pelas próprias migrações.
+      await client.query('REVOKE ALL ON SCHEMA public FROM PUBLIC');
     });
   }
 }

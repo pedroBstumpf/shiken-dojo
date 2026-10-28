@@ -1,23 +1,19 @@
-import type { FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { buildApp } from '../src/app.js';
-import { loadConfig } from '../src/config/env.js';
+import type { App } from '../src/app.js';
 import { AppError } from '../src/shared/http/app-error.js';
+import { createTestApp, type TestContext } from './support/app.js';
 
-let app: FastifyInstance | undefined;
+let context: TestContext | undefined;
 
-async function createApp(env: NodeJS.ProcessEnv = {}): Promise<FastifyInstance> {
-  app = await buildApp({
-    config: loadConfig({ NODE_ENV: 'test', LOG_LEVEL: 'silent', ...env }),
-    isReady: async () => true,
-  });
-  return app;
+async function createApp(env: NodeJS.ProcessEnv = {}): Promise<App> {
+  context = await createTestApp(env);
+  return context.app;
 }
 
 afterEach(async () => {
-  await app?.close();
-  app = undefined;
+  await context?.close();
+  context = undefined;
 });
 
 describe('camada HTTP', () => {
@@ -32,6 +28,14 @@ describe('camada HTTP', () => {
       code: 'NOT_FOUND',
       traceId: expect.stringMatching(/^[0-9a-f]{32}$/),
     });
+  });
+
+  it('informa que está pronto quando o banco responde', async () => {
+    const server = await createApp();
+    const response = await server.inject({ method: 'GET', url: '/health/ready' });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ status: 'ok' });
   });
 
   it('envia headers de segurança e não revela a tecnologia', async () => {
