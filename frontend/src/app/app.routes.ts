@@ -10,6 +10,15 @@ export const routes: Routes = [
       import('@features/auth/feature/login-page.component').then((m) => m.LoginPageComponent),
   },
   {
+    // Sem guard: o link do convite precisa funcionar mesmo com outra sessão aberta no navegador.
+    path: 'accept-invite',
+    title: 'Definir senha',
+    loadComponent: () =>
+      import('@features/auth/feature/accept-invite-page.component').then(
+        (m) => m.AcceptInvitePageComponent,
+      ),
+  },
+  {
     // Tudo daqui para baixo exige professor logado.
     path: '',
     canActivate: [authGuard],
