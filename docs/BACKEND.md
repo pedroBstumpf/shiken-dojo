@@ -44,15 +44,15 @@
 
 | Item | Escolha | ADR |
 |---|---|---|
-| Linguagem / runtime | _a definir_ | |
-| Framework | _a definir_ | |
-| Banco de dados principal | **PostgreSQL** | |
-| ORM / query builder | _a definir_ | |
-| Autenticação | _a definir (recomendado: provedor OIDC gerenciado)_ | |
-| Cache | _a definir_ | |
-| Fila / mensageria | _a definir_ | |
-| Hospedagem | _a definir_ | |
-| Observabilidade | _a definir (recomendado: OpenTelemetry)_ | |
+| Linguagem / runtime | **Node.js 24 LTS + TypeScript (strict)** | [0001](./adr/0001-stack-do-back-end.md) |
+| Framework | **Fastify 5** + **Zod 4** (validação e OpenAPI) | [0001](./adr/0001-stack-do-back-end.md) |
+| Banco de dados principal | **PostgreSQL 18** | [0001](./adr/0001-stack-do-back-end.md) |
+| ORM / query builder | **node-postgres (`pg`)** com SQL parametrizado; migrações em `.sql` versionado | [0001](./adr/0001-stack-do-back-end.md) |
+| Autenticação | **Login próprio** (Argon2id) + sessão no servidor em cookie `HttpOnly`; OIDC como evolução | [0001](./adr/0001-stack-do-back-end.md) |
+| Cache | _nenhum por enquanto_ | [0001](./adr/0001-stack-do-back-end.md) |
+| Fila / mensageria | **Outbox no PostgreSQL** + worker (`SKIP LOCKED`) | [0001](./adr/0001-stack-do-back-end.md) |
+| Hospedagem | _a definir (container)_ | |
+| Observabilidade | **Logs JSON (pino)** com `traceId`; OpenTelemetry como evolução | [0001](./adr/0001-stack-do-back-end.md) |
 
 ---
 
