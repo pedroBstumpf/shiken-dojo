@@ -32,6 +32,13 @@ const envSchema = z.object({
   SESSION_ABSOLUTE_HOURS: z.coerce.number().int().min(1).max(720).default(168),
   /** Recusa senhas que aparecem em vazamentos (Have I Been Pwned, por k-anonymity). */
   BREACHED_PASSWORD_CHECK: z.stringbool().default(true),
+  /** Endereço do front-end, usado nos links enviados por e-mail (ex.: convites). */
+  APP_BASE_URL: z.url({ protocol: /^https?$/ }).default('http://localhost:4200'),
+  /** smtp = envio real; file = grava .eml em MAIL_FILE_DIR (só desenvolvimento). */
+  MAIL_TRANSPORT: z.enum(['smtp', 'file']).default('file'),
+  SMTP_URL: z.url({ protocol: /^smtps?$/ }).optional(),
+  MAIL_FROM: z.string().min(3).default('Shiken Dojo <nao-responda@shiken-dojo.app>'),
+  MAIL_FILE_DIR: z.string().default('.local/mail'),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -51,6 +58,10 @@ export interface AppConfig {
   readonly csrfSecret: string;
   readonly session: { readonly idleMinutes: number; readonly absoluteHours: number };
   readonly breachedPasswordCheck: boolean;
+  readonly appBaseUrl: string;
+  readonly mail:
+    | { readonly transport: 'smtp'; readonly smtpUrl: string; readonly from: string }
+    | { readonly transport: 'file'; readonly dir: string; readonly from: string };
 }
 
 export class ConfigError extends Error {
@@ -70,9 +81,20 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
   }
   const env = result.data;
   const isProduction = env.NODE_ENV === 'production';
+  const problems: string[] = [];
   if (isProduction && env.COOKIE_SECURE === false) {
-    throw new ConfigError(['COOKIE_SECURE: cookies sem HTTPS não são permitidos em produção']);
+    problems.push('COOKIE_SECURE: cookies sem HTTPS não são permitidos em produção');
   }
+  if (isProduction && !env.APP_BASE_URL.startsWith('https://')) {
+    problems.push('APP_BASE_URL: use https em produção');
+  }
+  if (isProduction && env.MAIL_TRANSPORT !== 'smtp') {
+    problems.push('MAIL_TRANSPORT: use smtp em produção (o modo file não envia nada)');
+  }
+  if (env.MAIL_TRANSPORT === 'smtp' && !env.SMTP_URL) {
+    problems.push('SMTP_URL: obrigatório quando MAIL_TRANSPORT=smtp');
+  }
+  if (problems.length > 0) throw new ConfigError(problems);
   return {
     env: env.NODE_ENV,
     isProduction,
@@ -87,5 +109,10 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     csrfSecret: env.CSRF_SECRET,
     session: { idleMinutes: env.SESSION_IDLE_MINUTES, absoluteHours: env.SESSION_ABSOLUTE_HOURS },
     breachedPasswordCheck: env.BREACHED_PASSWORD_CHECK,
+    appBaseUrl: env.APP_BASE_URL.replace(/\/+$/, ''),
+    mail:
+      env.MAIL_TRANSPORT === 'smtp'
+        ? { transport: 'smtp', smtpUrl: env.SMTP_URL ?? '', from: env.MAIL_FROM }
+        : { transport: 'file', dir: env.MAIL_FILE_DIR, from: env.MAIL_FROM },
   };
 }

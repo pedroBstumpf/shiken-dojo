@@ -1,6 +1,9 @@
 import { buildApp } from './app.js';
 import { ConfigError, loadConfig } from './config/env.js';
 import { createPool } from './infra/db/pool.js';
+import { createMailer } from './infra/mail/mailer.js';
+import { OutboxWorker } from './infra/mail/outbox-worker.js';
+import { startMaintenance } from './infra/maintenance.js';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -8,9 +11,15 @@ async function main(): Promise<void> {
     connectionString: config.databaseUrl,
     applicationName: 'shiken-dojo-api',
   });
-  const app = await buildApp({ config, pool });
+  const mailer = createMailer(config.mail);
+  const app = await buildApp({ config, pool, mailer });
   pool.on('error', (error) => app.log.error({ err: error }, 'Erro em conexão ociosa do banco'));
+
+  const worker = new OutboxWorker(pool, mailer, app.log);
+  const stopMaintenance = startMaintenance(pool, config.session.idleMinutes, app.log);
   app.addHook('onClose', async () => {
+    stopMaintenance();
+    await worker.stop();
     await pool.end();
   });
 
@@ -33,6 +42,10 @@ async function main(): Promise<void> {
   process.once('SIGINT', (signal) => void shutdown(signal));
 
   await app.listen({ host: config.host, port: config.port });
+  worker.start();
+  if (config.mail.transport === 'file') {
+    app.log.warn({ dir: config.mail.dir }, 'E-mails são gravados em arquivo, não enviados');
+  }
 }
 
 main().catch((error: unknown) => {

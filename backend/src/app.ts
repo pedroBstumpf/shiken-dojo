@@ -17,6 +17,7 @@ import type pg from 'pg';
 import { api } from './api.js';
 import type { AppConfig } from './config/env.js';
 import { isDatabaseReady } from './infra/db/pool.js';
+import type { Mailer } from './infra/mail/mailer.js';
 import { AuthService } from './modules/auth/auth.service.js';
 import {
   createHibpChecker,
@@ -40,6 +41,7 @@ export type App = FastifyInstance<
 export interface AppDependencies {
   readonly config: AppConfig;
   readonly pool: pg.Pool;
+  readonly mailer: Mailer;
 }
 
 /** Limite de corpo JSON. Uploads (multipart) têm limites próprios por rota. */

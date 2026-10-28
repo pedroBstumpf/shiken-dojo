@@ -6,6 +6,14 @@ const REQUIRED = {
   CSRF_SECRET: 'x'.repeat(32),
 };
 
+const PRODUCTION = {
+  ...REQUIRED,
+  NODE_ENV: 'production',
+  APP_BASE_URL: 'https://app.shiken-dojo.app',
+  MAIL_TRANSPORT: 'smtp',
+  SMTP_URL: 'smtps://user:pass@smtp.example.com',
+};
+
 describe('loadConfig', () => {
   it('aplica valores padrão em desenvolvimento', () => {
     const config = loadConfig(REQUIRED);
@@ -24,10 +32,13 @@ describe('loadConfig', () => {
   });
 
   it('liga cookies seguros em produção e não deixa desligar', () => {
-    expect(loadConfig({ ...REQUIRED, NODE_ENV: 'production' }).cookieSecure).toBe(true);
-    expect(() =>
-      loadConfig({ ...REQUIRED, NODE_ENV: 'production', COOKIE_SECURE: 'false' }),
-    ).toThrow(/COOKIE_SECURE/);
+    expect(loadConfig(PRODUCTION).cookieSecure).toBe(true);
+    expect(() => loadConfig({ ...PRODUCTION, COOKIE_SECURE: 'false' })).toThrow(/COOKIE_SECURE/);
+  });
+
+  it('não sobe em produção sem envio real de e-mail', () => {
+    expect(() => loadConfig({ ...PRODUCTION, MAIL_TRANSPORT: 'file' })).toThrow(/MAIL_TRANSPORT/);
+    expect(() => loadConfig({ ...PRODUCTION, SMTP_URL: undefined })).toThrow(/SMTP_URL/);
   });
 
   it('exige a conexão com o banco', () => {
