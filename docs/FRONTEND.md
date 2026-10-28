@@ -74,7 +74,6 @@ src/
 │   │   ├── guards/              # Guards genéricos (ex.: canLeaveGuard)
 │   │   └── models/              # Tipos genéricos (Paginated<T>, ApiError…)
 │   │
-│   ├── mock-api/                # API simulada (temporária), substitui o back-end em desenvolvimento
 │   ├── features/                # Uma pasta por domínio/funcionalidade
 │   │   └── exams/
 │   │       ├── data-access/     # Stores e services usados só por esta feature
@@ -105,7 +104,6 @@ core/       ──►  shared/
 
 - `shared/` **nunca** importa de `features/` ou `core/`.
 - Uma feature **não importa** de outra feature. Se duas features precisam da mesma coisa, ela sobe para `shared/` (se for genérica) ou para um `data-access` compartilhado.
-- `mock-api/` é temporário: simula o servidor usando os DTOs e as regras de `shared/data-access`. É registrado no `app.config.ts` apenas quando `environment.useMockApi` é `true` e será removido quando o back-end existir (ver [INTEGRACAO-BACKEND.md](./INTEGRACAO-BACKEND.md)).
 - `core/` é importado apenas pelo `app.config.ts`, pelo layout e por features que precisem de serviços globais (ex.: `AuthService`).
 - Aplique essas regras com lint (ex.: `eslint-plugin-boundaries` ou `@nx/enforce-module-boundaries`).
 
