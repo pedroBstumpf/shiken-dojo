@@ -64,17 +64,20 @@ src/
 │   │   ├── layout/              # Shell, header, sidebar, footer
 │   │   └── config/              # InjectionTokens, configuração de ambiente
 │   │
-│   ├── shared/                  # Reutilizável e SEM regra de negócio
+│   ├── shared/                  # Reutilizável e SEM regra de negócio de tela
+│   │   ├── data-access/         # Clients da API, DTOs, mappers e modelos usados por 2+ features
 │   │   ├── ui/                  # Componentes de apresentação (button, empty-state, skeleton)
 │   │   ├── directives/
 │   │   ├── pipes/
 │   │   ├── utils/               # Funções puras
 │   │   ├── validators/
+│   │   ├── guards/              # Guards genéricos (ex.: canLeaveGuard)
 │   │   └── models/              # Tipos genéricos (Paginated<T>, ApiError…)
 │   │
+│   ├── mock-api/                # API simulada (temporária), substitui o back-end em desenvolvimento
 │   ├── features/                # Uma pasta por domínio/funcionalidade
 │   │   └── exams/
-│   │       ├── data-access/     # Services HTTP, stores, mappers, DTOs
+│   │       ├── data-access/     # Stores e services usados só por esta feature
 │   │       ├── feature/         # Componentes "smart" (páginas/containers)
 │   │       ├── ui/              # Componentes "dumb" exclusivos desta feature
 │   │       ├── models/          # Tipos de domínio da feature
@@ -102,6 +105,7 @@ core/       ──►  shared/
 
 - `shared/` **nunca** importa de `features/` ou `core/`.
 - Uma feature **não importa** de outra feature. Se duas features precisam da mesma coisa, ela sobe para `shared/` (se for genérica) ou para um `data-access` compartilhado.
+- `mock-api/` é temporário: simula o servidor usando os DTOs e as regras de `shared/data-access`. É registrado no `app.config.ts` apenas quando `environment.useMockApi` é `true` e será removido quando o back-end existir (ver [INTEGRACAO-BACKEND.md](./INTEGRACAO-BACKEND.md)).
 - `core/` é importado apenas pelo `app.config.ts`, pelo layout e por features que precisem de serviços globais (ex.: `AuthService`).
 - Aplique essas regras com lint (ex.: `eslint-plugin-boundaries` ou `@nx/enforce-module-boundaries`).
 
@@ -249,7 +253,7 @@ Configure no `tsconfig.json` para evitar `../../../`:
 ### Regras gerais
 
 - Todos os componentes são **standalone** (padrão do Angular moderno) — não criamos `NgModule`.
-- **`ChangeDetectionStrategy.OnPush` sempre.**
+- **`ChangeDetectionStrategy.OnPush` sempre** (é o padrão a partir do Angular 22, mas declaramos explicitamente para deixar a intenção clara).
 - Use as APIs baseadas em funções: `input()`, `input.required()`, `output()`, `model()`, `viewChild()`, `contentChild()`, `inject()`.
 - Não use os decorators legados `@Input`, `@Output`, `@ViewChild`, `@HostBinding`, `@HostListener`. Use o objeto `host` no decorator.
 - Membros usados apenas pelo template: `protected`. Membros de API pública: `readonly`.
