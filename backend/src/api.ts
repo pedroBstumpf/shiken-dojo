@@ -6,6 +6,10 @@ import { examEmailRoutes, type ExamEmailService } from './modules/exams/exam-ema
 import { examTemplateRoutes, type ExamTemplatesService } from './modules/exams/exam-templates.js';
 import { examRoutes } from './modules/exams/exams.routes.js';
 import type { ExamsService } from './modules/exams/exams.service.js';
+import {
+  studentPrivacyRoutes,
+  type StudentPrivacyService,
+} from './modules/students/student-privacy.js';
 import { studentRoutes } from './modules/students/students.routes.js';
 import type { StudentsService } from './modules/students/students.service.js';
 import { teacherRoutes } from './modules/teachers/teachers.routes.js';
@@ -16,6 +20,7 @@ import csrfPlugin from './shared/http/csrf.plugin.js';
 export interface ApiServices {
   readonly auth: AuthService;
   readonly students: StudentsService;
+  readonly studentPrivacy: StudentPrivacyService;
   readonly teachers: TeachersService;
   readonly examTemplates: ExamTemplatesService;
   readonly exams: ExamsService;
@@ -47,6 +52,7 @@ export const api: FastifyPluginAsyncZod<ApiOptions> = async (app, options) => {
     scope.addHook('onRequest', requireAuth(services.auth, cookies));
     await scope.register(teacherRoutes, { service: services.teachers });
     await scope.register(studentRoutes, { service: services.students });
+    await scope.register(studentPrivacyRoutes, { service: services.studentPrivacy });
     await scope.register(examTemplateRoutes, { service: services.examTemplates });
     await scope.register(examRoutes, { service: services.exams });
     await scope.register(examEmailRoutes, { service: services.examEmail });

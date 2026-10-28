@@ -27,6 +27,7 @@ import { ExamEmailService } from './modules/exams/exam-email.js';
 import { ExamTemplatesService } from './modules/exams/exam-templates.js';
 import { ExamsService } from './modules/exams/exams.service.js';
 import { healthRoutes } from './modules/health/health.routes.js';
+import { StudentPrivacyService } from './modules/students/student-privacy.js';
 import { StudentsService } from './modules/students/students.service.js';
 import { TeachersService } from './modules/teachers/teachers.service.js';
 import { errorHandler, notFoundHandler } from './shared/http/error-handler.js';
@@ -85,6 +86,7 @@ export async function buildApp(deps: AppDependencies): Promise<App> {
   const services = {
     auth: new AuthService(deps.pool, config.session, breachedPasswords),
     students: new StudentsService(deps.pool),
+    studentPrivacy: new StudentPrivacyService(deps.pool),
     teachers: new TeachersService(deps.pool, config.appBaseUrl),
     examTemplates: new ExamTemplatesService(deps.pool),
     exams: new ExamsService(deps.pool),
