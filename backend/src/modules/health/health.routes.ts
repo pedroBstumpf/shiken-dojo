@@ -12,14 +12,14 @@ export interface HealthRoutesOptions {
 export const healthRoutes: FastifyPluginAsyncZod<HealthRoutesOptions> = async (app, options) => {
   app.get(
     '/health/live',
-    { schema: { response: { 200: healthSchema } }, config: { rateLimit: false } },
+    { schema: { hide: true, response: { 200: healthSchema } }, config: { rateLimit: false } },
     async () => ({ status: 'ok' as const }),
   );
 
   app.get(
     '/health/ready',
     {
-      schema: { response: { 200: healthSchema, 503: healthSchema } },
+      schema: { hide: true, response: { 200: healthSchema, 503: healthSchema } },
       config: { rateLimit: false },
     },
     async (_request, reply) => {

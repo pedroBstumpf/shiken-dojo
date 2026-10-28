@@ -38,6 +38,14 @@ describe('camada HTTP', () => {
     expect(response.json()).toEqual({ status: 'ok' });
   });
 
+  it('publica o contrato OpenAPI 3.1 fora de produção', async () => {
+    const server = await createApp();
+    const response = await server.inject({ method: 'GET', url: '/api/v1/openapi.json' });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({ openapi: '3.1.0' });
+  });
+
   it('envia headers de segurança e não revela a tecnologia', async () => {
     const server = await createApp();
     const response = await server.inject({ method: 'GET', url: '/health/live' });

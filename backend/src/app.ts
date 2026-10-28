@@ -13,10 +13,12 @@ import {
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import type pg from 'pg';
+import { api } from './api.js';
 import type { AppConfig } from './config/env.js';
 import { isDatabaseReady } from './infra/db/pool.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { errorHandler, notFoundHandler } from './shared/http/error-handler.js';
+import { registerOpenApi } from './shared/http/openapi.js';
 import securityPlugin from './shared/http/security.plugin.js';
 import { loggerOptions } from './shared/logging/logger.js';
 
@@ -61,7 +63,10 @@ export async function buildApp(deps: AppDependencies): Promise<App> {
     globalRateLimitPerMinute: config.globalRateLimitPerMinute,
   });
 
+  await registerOpenApi(app);
+
   await app.register(healthRoutes, { isReady: () => isDatabaseReady(deps.pool) });
+  await app.register(api, { prefix: '/api/v1', exposeOpenApi: !config.isProduction });
 
   return app;
 }
