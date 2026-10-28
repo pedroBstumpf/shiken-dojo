@@ -1,28 +1,47 @@
 import { Routes } from '@angular/router';
+import { authGuard, guestGuard } from '@core/auth/auth.guard';
 
 export const routes: Routes = [
   {
-    path: '',
-    pathMatch: 'full',
-    title: 'Início',
+    path: 'login',
+    title: 'Entrar',
+    canActivate: [guestGuard],
     loadComponent: () =>
-      import('@features/dashboard/dashboard-page.component').then((m) => m.DashboardPageComponent),
+      import('@features/auth/feature/login-page.component').then((m) => m.LoginPageComponent),
   },
   {
-    path: 'teachers',
-    loadChildren: () => import('@features/teachers/teachers.routes').then((m) => m.TEACHERS_ROUTES),
-  },
-  {
-    path: 'students',
-    loadChildren: () => import('@features/students/students.routes').then((m) => m.STUDENTS_ROUTES),
-  },
-  {
-    path: 'exams',
-    loadChildren: () => import('@features/exams/exams.routes').then((m) => m.EXAMS_ROUTES),
-  },
-  {
-    path: 'history',
-    loadChildren: () => import('@features/exams/exams.routes').then((m) => m.HISTORY_ROUTES),
+    // Tudo daqui para baixo exige professor logado.
+    path: '',
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        title: 'Início',
+        loadComponent: () =>
+          import('@features/dashboard/dashboard-page.component').then(
+            (m) => m.DashboardPageComponent,
+          ),
+      },
+      {
+        path: 'teachers',
+        loadChildren: () =>
+          import('@features/teachers/teachers.routes').then((m) => m.TEACHERS_ROUTES),
+      },
+      {
+        path: 'students',
+        loadChildren: () =>
+          import('@features/students/students.routes').then((m) => m.STUDENTS_ROUTES),
+      },
+      {
+        path: 'exams',
+        loadChildren: () => import('@features/exams/exams.routes').then((m) => m.EXAMS_ROUTES),
+      },
+      {
+        path: 'history',
+        loadChildren: () => import('@features/exams/exams.routes').then((m) => m.HISTORY_ROUTES),
+      },
+    ],
   },
   {
     path: '**',

@@ -3,10 +3,14 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from '@core/auth/auth.service';
+import { TEACHER_ROLE_INFO } from '@shared/data-access/teachers/teacher.model';
 import { EnsoLogoComponent } from '@shared/ui/enso-logo.component';
+import { InitialsAvatarComponent } from '@shared/ui/initials-avatar.component';
 import { filter, skip } from 'rxjs';
 import { ThemeService } from './theme.service';
 
@@ -27,8 +31,10 @@ interface NavLink {
     MatTabsModule,
     MatButtonModule,
     MatIconModule,
+    MatMenuModule,
     MatTooltipModule,
     EnsoLogoComponent,
+    InitialsAvatarComponent,
   ],
   templateUrl: './shell.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +44,8 @@ export class ShellComponent {
   private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
   protected readonly theme = inject(ThemeService);
+  protected readonly auth = inject(AuthService);
+  protected readonly roleInfo = TEACHER_ROLE_INFO;
 
   protected readonly links: readonly NavLink[] = [
     { path: '/', label: 'Início', shortLabel: 'Início', icon: 'temple_buddhist', exact: true },
@@ -64,6 +72,12 @@ export class ShellComponent {
       exact: false,
     },
   ];
+
+  protected logout(): void {
+    // Recarrega a página ao sair: nada da sessão anterior (listas, notas) fica na memória.
+    const leave = () => this.document.location.assign('/login');
+    this.auth.logout().subscribe({ complete: leave, error: leave });
+  }
 
   constructor() {
     // Ao trocar de página, leva o foco ao título (leitores de tela anunciam a nova página).

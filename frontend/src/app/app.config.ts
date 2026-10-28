@@ -23,6 +23,7 @@ import {
   withComponentInputBinding,
   withInMemoryScrolling,
 } from '@angular/router';
+import { authInterceptor } from '@core/auth/auth.interceptor';
 import { errorInterceptor } from '@core/http/error.interceptor';
 import { PageTitleStrategy } from '@core/layout/page-title.strategy';
 import { environment } from '@env/environment';
@@ -43,8 +44,13 @@ export const appConfig: ApplicationConfig = {
     { provide: TitleStrategy, useClass: PageTitleStrategy },
     provideHttpClient(
       withFetch(),
+      // authInterceptor vem antes: recebe o erro já normalizado pelo errorInterceptor.
       // A API simulada deve ser o último interceptor (ver mock-api.interceptor.ts).
-      withInterceptors([errorInterceptor, ...(environment.useMockApi ? [mockApiInterceptor] : [])]),
+      withInterceptors([
+        authInterceptor,
+        errorInterceptor,
+        ...(environment.useMockApi ? [mockApiInterceptor] : []),
+      ]),
       // Alinhado ao padrão anti-CSRF previsto no back-end (docs/BACKEND.md §8).
       withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' }),
     ),

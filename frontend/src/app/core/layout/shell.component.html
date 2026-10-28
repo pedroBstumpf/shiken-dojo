@@ -22,36 +22,63 @@
           >
         </span>
       </a>
+      <span class="flex-1" aria-hidden="true"></span>
 
       <!-- O wrapper controla a visibilidade: o display do mat-tab-nav-bar venceria o "hidden" do Tailwind. -->
-      <div class="ml-auto hidden md:block">
-        <nav mat-tab-nav-bar [tabPanel]="tabPanel" aria-label="Navegação principal">
-          @for (link of links; track link.path) {
-            <a
-              mat-tab-link
-              [routerLink]="link.path"
-              routerLinkActive
-              #rla="routerLinkActive"
-              [routerLinkActiveOptions]="{ exact: link.exact }"
-              [active]="rla.isActive"
-            >
-              <mat-icon class="mr-2" aria-hidden="true">{{ link.icon }}</mat-icon>
-              {{ link.label }}
-            </a>
-          }
-        </nav>
-      </div>
+      @if (auth.isAuthenticated()) {
+        <div class="hidden md:block">
+          <nav mat-tab-nav-bar [tabPanel]="tabPanel" aria-label="Navegação principal">
+            @for (link of links; track link.path) {
+              <a
+                mat-tab-link
+                [routerLink]="link.path"
+                routerLinkActive
+                #rla="routerLinkActive"
+                [routerLinkActiveOptions]="{ exact: link.exact }"
+                [active]="rla.isActive"
+              >
+                <mat-icon class="mr-2" aria-hidden="true">{{ link.icon }}</mat-icon>
+                {{ link.label }}
+              </a>
+            }
+          </nav>
+        </div>
+      }
 
       <button
         matIconButton
         type="button"
-        class="ml-auto md:ml-2"
+        class="md:ml-2"
         (click)="theme.toggle()"
         [matTooltip]="theme.isDark() ? 'Usar modo claro' : 'Usar modo escuro'"
         [attr.aria-label]="theme.isDark() ? 'Usar modo claro' : 'Usar modo escuro'"
       >
         <mat-icon aria-hidden="true">{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
       </button>
+
+      @if (auth.session(); as session) {
+        <button
+          matIconButton
+          type="button"
+          [matMenuTriggerFor]="accountMenu"
+          [matTooltip]="session.teacher.fullName"
+          [attr.aria-label]="'Conta de ' + session.teacher.fullName"
+        >
+          <sd-initials-avatar [name]="session.teacher.fullName" [size]="32" />
+        </button>
+        <mat-menu #accountMenu="matMenu" xPosition="before">
+          <div class="max-w-72 px-4 py-2">
+            <p class="truncate font-semibold text-on-surface">{{ session.teacher.fullName }}</p>
+            <p class="truncate text-sm text-on-surface-variant">
+              {{ roleInfo[session.teacher.role].label }} · {{ session.dojo.name }}
+            </p>
+          </div>
+          <button mat-menu-item type="button" (click)="logout()">
+            <mat-icon aria-hidden="true">logout</mat-icon>
+            Sair
+          </button>
+        </mat-menu>
+      }
     </div>
   </div>
 </header>
@@ -72,24 +99,26 @@
 </footer>
 
 <!-- Navegação inferior no celular: fica na zona do polegar. -->
-<nav
-  class="sd-no-print fixed inset-x-0 bottom-0 z-20 grid auto-cols-fr grid-flow-col border-t border-outline-variant bg-surface-low pb-[env(safe-area-inset-bottom)] md:hidden"
-  aria-label="Navegação principal"
->
-  @for (link of links; track link.path) {
-    <a
-      [routerLink]="link.path"
-      routerLinkActive="text-primary is-active"
-      [routerLinkActiveOptions]="{ exact: link.exact }"
-      ariaCurrentWhenActive="page"
-      class="group flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium text-on-surface-variant"
-    >
-      <span
-        class="grid h-8 w-16 place-items-center rounded-full transition-colors group-[.is-active]:bg-primary-container group-[.is-active]:text-on-primary-container"
+@if (auth.isAuthenticated()) {
+  <nav
+    class="sd-no-print fixed inset-x-0 bottom-0 z-20 grid auto-cols-fr grid-flow-col border-t border-outline-variant bg-surface-low pb-[env(safe-area-inset-bottom)] md:hidden"
+    aria-label="Navegação principal"
+  >
+    @for (link of links; track link.path) {
+      <a
+        [routerLink]="link.path"
+        routerLinkActive="text-primary is-active"
+        [routerLinkActiveOptions]="{ exact: link.exact }"
+        ariaCurrentWhenActive="page"
+        class="group flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium text-on-surface-variant"
       >
-        <mat-icon aria-hidden="true">{{ link.icon }}</mat-icon>
-      </span>
-      {{ link.shortLabel }}
-    </a>
-  }
-</nav>
+        <span
+          class="grid h-8 w-16 place-items-center rounded-full transition-colors group-[.is-active]:bg-primary-container group-[.is-active]:text-on-primary-container"
+        >
+          <mat-icon aria-hidden="true">{{ link.icon }}</mat-icon>
+        </span>
+        {{ link.shortLabel }}
+      </a>
+    }
+  </nav>
+}

@@ -1,0 +1,71 @@
+<section class="mx-auto flex max-w-md flex-col items-center pt-4 sm:pt-10">
+  <sd-enso-logo [size]="72" />
+  <p class="mt-4 text-sm font-medium tracking-wide text-primary">
+    <span class="font-display" aria-hidden="true">礼</span>
+    <span aria-hidden="true"> · </span><span>rei · respeito</span>
+  </p>
+  <h1 class="mt-1 text-3xl font-bold text-on-surface" tabindex="-1">Entrar</h1>
+  <p class="mt-2 text-center text-on-surface-variant">Acesso para professores do dojo.</p>
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+    class="mt-6 w-full rounded-2xl border border-outline-variant bg-surface-lowest p-4 sm:p-6"
+    novalidate
+  >
+    @if (formError(); as message) {
+      <p
+        class="mb-4 flex items-start gap-2 rounded-xl bg-error-container px-4 py-3 text-on-error-container"
+        role="alert"
+      >
+        <mat-icon aria-hidden="true">error</mat-icon>
+        <span>{{ message }}</span>
+      </p>
+    }
+
+    <mat-form-field class="w-full">
+      <mat-label>E-mail</mat-label>
+      <input
+        matInput
+        type="email"
+        formControlName="email"
+        autocomplete="username"
+        inputmode="email"
+        maxlength="254"
+      />
+      <mat-error>{{ form.controls.email.errors | fieldError }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="mt-2 w-full">
+      <mat-label>Senha</mat-label>
+      <input
+        matInput
+        [type]="showPassword() ? 'text' : 'password'"
+        formControlName="password"
+        autocomplete="current-password"
+        maxlength="128"
+      />
+      <button
+        matIconButton
+        matSuffix
+        type="button"
+        (click)="showPassword.set(!showPassword())"
+        [attr.aria-label]="showPassword() ? 'Ocultar senha' : 'Mostrar senha'"
+        [attr.aria-pressed]="showPassword()"
+      >
+        <mat-icon aria-hidden="true">{{
+          showPassword() ? 'visibility_off' : 'visibility'
+        }}</mat-icon>
+      </button>
+      <mat-error>{{ form.controls.password.errors | fieldError }}</mat-error>
+    </mat-form-field>
+
+    <button matButton="filled" type="submit" class="mt-4 w-full" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? 'Entrando…' : 'Entrar' }}
+    </button>
+  </form>
+
+  <p class="mt-4 max-w-sm text-center text-sm text-on-surface-variant">
+    Ainda não tem acesso? Peça um convite ao sensei responsável pelo dojo.
+  </p>
+</section>
