@@ -1,0 +1,89 @@
+<sd-page-header
+  [title]="isEdit() ? 'Editar aluno' : 'Cadastrar aluno'"
+  kanji="入門"
+  kanjiReading="nyūmon · entrada no dojo"
+  description="Preencha apenas o necessário. Você pode completar o cadastro depois."
+/>
+
+@if (student.error(); as error) {
+  <sd-error-state [message]="error.message" (retry)="student.reload()" />
+} @else if (student.isLoading()) {
+  <div class="max-w-2xl space-y-4" aria-busy="true" aria-label="Carregando cadastro">
+    @for (row of [1, 2, 3, 4]; track row) {
+      <div class="h-14 animate-pulse rounded-xl bg-surface-container"></div>
+    }
+  </div>
+} @else {
+  <form
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+    class="max-w-2xl rounded-2xl border border-outline-variant bg-surface-lowest p-4 sm:p-6"
+    novalidate
+  >
+    <fieldset class="space-y-4">
+      <legend class="mb-4 text-lg font-semibold">Dados do aluno</legend>
+
+      <mat-form-field class="w-full">
+        <mat-label>Nome completo</mat-label>
+        <input matInput formControlName="fullName" autocomplete="name" maxlength="120" />
+        <mat-error>{{ form.controls.fullName.errors | fieldError }}</mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="w-full">
+        <mat-label>Faixa atual</mat-label>
+        <mat-select formControlName="belt">
+          <mat-select-trigger>
+            <sd-belt-badge [belt]="form.controls.belt.value" />
+          </mat-select-trigger>
+          @for (option of belts; track option.belt) {
+            <mat-option [value]="option.belt">
+              <sd-belt-badge [belt]="option.belt" />
+            </mat-option>
+          }
+        </mat-select>
+        <mat-error>{{ form.controls.belt.errors | fieldError }}</mat-error>
+      </mat-form-field>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <mat-form-field>
+          <mat-label>Data de nascimento</mat-label>
+          <input matInput [matDatepicker]="birthPicker" formControlName="birthDate" [max]="today" />
+          <mat-hint>Opcional · dd/mm/aaaa</mat-hint>
+          <mat-datepicker-toggle matIconSuffix [for]="birthPicker" />
+          <mat-datepicker #birthPicker startView="multi-year" />
+          <mat-error>{{ form.controls.birthDate.errors | fieldError }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Treina desde</mat-label>
+          <input
+            matInput
+            [matDatepicker]="enrollmentPicker"
+            formControlName="enrollmentDate"
+            [max]="today"
+          />
+          <mat-hint>Opcional · dd/mm/aaaa</mat-hint>
+          <mat-datepicker-toggle matIconSuffix [for]="enrollmentPicker" />
+          <mat-datepicker #enrollmentPicker />
+          <mat-error>{{ form.controls.enrollmentDate.errors | fieldError }}</mat-error>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field class="w-full">
+        <mat-label>Observações</mat-label>
+        <textarea matInput formControlName="notes" rows="3" maxlength="500"></textarea>
+        <mat-hint>Opcional · Evite registrar dados de saúde ou documentos aqui.</mat-hint>
+        <mat-hint align="end">{{ form.controls.notes.value.length }}/500</mat-hint>
+        <mat-error>{{ form.controls.notes.errors | fieldError }}</mat-error>
+      </mat-form-field>
+    </fieldset>
+
+    <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <a matButton routerLink="/students">Cancelar</a>
+      <button matButton="filled" type="submit" [disabled]="isSaving()">
+        <mat-icon aria-hidden="true">{{ isSaving() ? 'hourglass_top' : 'save' }}</mat-icon>
+        {{ isSaving() ? 'Salvando…' : isEdit() ? 'Salvar alterações' : 'Cadastrar aluno' }}
+      </button>
+    </div>
+  </form>
+}

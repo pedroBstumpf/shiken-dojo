@@ -1,0 +1,65 @@
+<sd-page-header
+  title="Histórico de provas"
+  kanji="記録"
+  kanjiReading="kiroku"
+  description="Todas as provas aplicadas, com as notas e o resultado de cada aluno."
+>
+  <a actions matButton="filled" routerLink="/exams/new">
+    <mat-icon aria-hidden="true">sports_martial_arts</mat-icon>
+    Aplicar nova prova
+  </a>
+</sd-page-header>
+
+@if (exams.error(); as error) {
+  <sd-error-state [message]="error.message" (retry)="exams.reload()" />
+} @else if (exams.isLoading() && !hasExams()) {
+  <div class="grid gap-4 md:grid-cols-2" aria-busy="true" aria-label="Carregando histórico">
+    @for (item of [1, 2, 3, 4]; track item) {
+      <div class="h-32 animate-pulse rounded-2xl bg-surface-container"></div>
+    }
+  </div>
+} @else if (!hasExams()) {
+  <sd-empty-state
+    title="Nenhuma prova aplicada ainda"
+    description="Quando você aplicar uma prova de faixa, ela aparecerá aqui com todas as notas e resultados."
+    actionLabel="Aplicar primeira prova"
+    actionIcon="sports_martial_arts"
+    (action)="onNewExam()"
+  />
+} @else {
+  <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center">
+    <mat-form-field class="w-full lg:max-w-sm">
+      <mat-label>Buscar por tabela, examinador ou local</mat-label>
+      <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+      <input matInput type="search" [value]="q()" (input)="onSearch($event)" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-chip-listbox
+      aria-label="Filtrar por situação"
+      [value]="statusFilter()"
+      (change)="onStatusChange($event.value ?? null)"
+    >
+      @for (option of statusFilters; track option.value) {
+        <mat-chip-option [value]="option.value">{{ option.label }}</mat-chip-option>
+      }
+    </mat-chip-listbox>
+  </div>
+
+  @if (filteredExams().length > 0) {
+    <ul class="grid gap-4 md:grid-cols-2" aria-label="Provas">
+      @for (exam of filteredExams(); track exam.id) {
+        <li class="contents">
+          <sd-exam-summary-card [exam]="exam" [deletable]="true" (deleted)="onDelete($event)" />
+        </li>
+      }
+    </ul>
+  } @else {
+    <sd-empty-state
+      title="Nenhuma prova encontrada"
+      description="Nenhuma prova corresponde aos filtros aplicados."
+      actionLabel="Limpar filtros"
+      actionIcon="filter_alt_off"
+      (action)="clearFilters()"
+    />
+  }
+}

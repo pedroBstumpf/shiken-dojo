@@ -1,0 +1,126 @@
+@if (editable()) {
+  <div
+    class="sd-no-print z-10 mb-3 flex min-h-14 flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-ink px-4 py-2 text-surface shadow-md md:sticky md:top-16"
+  >
+    @if (focusInfo(); as info) {
+      <span
+        class="grid h-8 min-w-8 place-items-center rounded-full bg-primary px-2 text-sm font-bold text-on-primary"
+      >
+        {{ info.number }}
+      </span>
+      <span class="text-base font-semibold">{{ info.fullName }}</span>
+      <span class="opacity-60" aria-hidden="true">·</span>
+      <span class="font-display text-lg font-bold">{{ info.item }}</span>
+      <span class="text-sm opacity-70">{{ info.section }}</span>
+    } @else {
+      <span class="font-display text-lg" aria-hidden="true">審査</span>
+      <span class="text-sm opacity-80"
+        >Toque em uma célula para começar. A linha e a coluna avaliadas ficam destacadas.</span
+      >
+    }
+    <span class="ml-auto hidden text-xs opacity-70 lg:inline">
+      Setas para navegar · Enter:
+      {{ enterDirection() === 'student' ? 'próximo aluno' : 'próxima técnica' }} · Esc desfaz
+    </span>
+  </div>
+}
+
+<div class="grid-scroll" (mouseleave)="onMouseLeave()">
+  <table>
+    <caption class="sr-only">
+      Notas de 0 a 10 por técnica (linhas) e por aluno (colunas)
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col" class="corner">
+          <span class="block">Técnica</span>
+          <span class="block">\ Aluno nº</span>
+        </th>
+        @for (column of columns(); track column.participant.studentId) {
+          <th
+            scope="col"
+            class="student-head"
+            [class.is-active-col]="active()?.col === column.col"
+            [matTooltip]="column.participant.fullName"
+          >
+            <span class="num">{{ column.number }}</span>
+            <span class="name">{{ column.shortName }}</span>
+            <sd-belt-badge [belt]="column.participant.belt" [showLabel]="false" class="mt-1" />
+          </th>
+        }
+      </tr>
+    </thead>
+
+    @for (vm of sectionVms(); track vm.section.id) {
+      <tbody>
+        <tr class="section-row">
+          <th scope="colgroup" [attr.colspan]="columns().length + 1">
+            <span class="kanji" aria-hidden="true">{{ vm.section.kanji }}</span>
+            {{ vm.section.title }}
+          </th>
+        </tr>
+        @for (row of vm.rows; track row.item.id) {
+          <tr [class.is-active-row]="active()?.row === row.row">
+            <th scope="row">{{ row.item.label }}</th>
+            @for (cell of row.cells; track cell.key) {
+              <td
+                [class.is-active-col]="active()?.col === cell.col"
+                [class.is-invalid]="cell.invalid"
+                (mouseenter)="onHover(row.row, cell.col)"
+              >
+                @if (editable()) {
+                  <input
+                    class="cell-input"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    maxlength="4"
+                    [value]="cell.text"
+                    [attr.data-cell]="row.row + ':' + cell.col"
+                    [attr.aria-label]="cell.ariaLabel"
+                    [attr.aria-invalid]="cell.invalid"
+                    (focus)="onFocus($event, row.row, cell.col)"
+                    (blur)="onCommit($event, cell)"
+                    (keydown)="onKeydown($event, row.row, cell.col, cell)"
+                  />
+                } @else {
+                  <span class="cell-text">{{ cell.text || '—' }}</span>
+                }
+              </td>
+            }
+          </tr>
+        }
+        @if (vm.totals; as totals) {
+          <tr class="total-row">
+            <th scope="row">Total</th>
+            @for (total of totals; track $index) {
+              <td [class.is-active-col]="active()?.col === $index">{{ total }}</td>
+            }
+          </tr>
+        }
+      </tbody>
+    }
+
+    <tfoot>
+      <tr>
+        <th scope="row">
+          Média
+          <span class="text-xs font-normal text-on-surface-variant"
+            >(mínimo {{ passingGradeText() }})</span
+          >
+        </th>
+        @for (column of columns(); track column.participant.studentId) {
+          <td [class.is-active-col]="active()?.col === column.col">{{ column.averageText }}</td>
+        }
+      </tr>
+      <tr>
+        <th scope="row">Resultado</th>
+        @for (column of columns(); track column.participant.studentId) {
+          <td [class.is-active-col]="active()?.col === column.col">
+            <span class="result" [attr.data-status]="column.status">{{ column.statusLabel }}</span>
+          </td>
+        }
+      </tr>
+    </tfoot>
+  </table>
+</div>

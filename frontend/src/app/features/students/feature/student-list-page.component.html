@@ -1,0 +1,73 @@
+<sd-page-header
+  title="Alunos"
+  kanji="生徒"
+  kanjiReading="seito"
+  description="Cadastre e acompanhe os karatecas do seu dojo."
+>
+  <a actions matButton="filled" routerLink="/students/new">
+    <mat-icon aria-hidden="true">person_add</mat-icon>
+    Cadastrar aluno
+  </a>
+</sd-page-header>
+
+@if (store.error(); as error) {
+  <sd-error-state [message]="error" (retry)="store.load()" />
+} @else if (store.isFirstLoad()) {
+  <div
+    class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+    aria-busy="true"
+    aria-label="Carregando alunos"
+  >
+    @for (item of skeletons; track item) {
+      <div class="h-28 animate-pulse rounded-2xl bg-surface-container"></div>
+    }
+  </div>
+} @else if (store.students().length === 0) {
+  <sd-empty-state
+    title="Nenhum aluno cadastrado"
+    description="Cadastre os alunos do dojo para poder aplicar provas de faixa e acompanhar a evolução de cada um."
+    actionLabel="Cadastrar primeiro aluno"
+    actionIcon="person_add"
+    (action)="onCreate()"
+  />
+} @else {
+  <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center">
+    <mat-form-field class="w-full lg:max-w-sm">
+      <mat-label>Buscar por nome</mat-label>
+      <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+      <input matInput type="search" [value]="q()" (input)="onSearch($event)" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-chip-listbox
+      aria-label="Filtrar por faixa"
+      [value]="beltFilter()"
+      (change)="onBeltChange($event.value ?? null)"
+    >
+      @for (option of beltOptions(); track option.belt) {
+        <mat-chip-option [value]="option.belt">{{ option.label }}</mat-chip-option>
+      }
+    </mat-chip-listbox>
+
+    <p class="text-sm text-on-surface-variant lg:ml-auto" aria-live="polite">
+      {{ filteredStudents().length }} de {{ store.students().length }} alunos
+    </p>
+  </div>
+
+  @if (filteredStudents().length > 0) {
+    <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Alunos">
+      @for (student of filteredStudents(); track student.id) {
+        <li class="contents">
+          <sd-student-card [student]="student" (removed)="store.remove($event)" />
+        </li>
+      }
+    </ul>
+  } @else {
+    <sd-empty-state
+      title="Nenhum aluno encontrado"
+      description="Nenhum aluno corresponde aos filtros aplicados."
+      actionLabel="Limpar filtros"
+      actionIcon="filter_alt_off"
+      (action)="clearFilters()"
+    />
+  }
+}

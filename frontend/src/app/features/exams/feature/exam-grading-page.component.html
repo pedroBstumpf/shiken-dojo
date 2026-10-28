@@ -1,0 +1,145 @@
+@if (exam.error(); as error) {
+  <sd-page-header title="Avaliação" kanji="審査" kanjiReading="shinsa" />
+  <sd-error-state [message]="error.message" (retry)="exam.reload()" />
+} @else if (exam.value(); as data) {
+  <sd-page-header
+    title="Avaliação"
+    kanji="審査"
+    kanjiReading="shinsa"
+    [description]="data.templateName"
+  />
+
+  <!-- Dados do exame -->
+  <dl class="mb-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-on-surface-variant">
+    <div class="flex items-center gap-2">
+      <dt class="sr-only">Faixas</dt>
+      <dd><sd-belt-transition [from]="data.fromBelt" [to]="data.toBelt" /></dd>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <dt>
+        <mat-icon class="sd-icon-sm" aria-hidden="true">event</mat-icon
+        ><span class="sr-only">Data</span>
+      </dt>
+      <dd>{{ data.date | date: 'longDate' }}</dd>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <dt>
+        <mat-icon class="sd-icon-sm" aria-hidden="true">person</mat-icon
+        ><span class="sr-only">Examinador</span>
+      </dt>
+      <dd>{{ data.examinerName }}</dd>
+    </div>
+    @if (data.location) {
+      <div class="flex items-center gap-1.5">
+        <dt>
+          <mat-icon class="sd-icon-sm" aria-hidden="true">location_on</mat-icon
+          ><span class="sr-only">Local</span>
+        </dt>
+        <dd>{{ data.location }}</dd>
+      </div>
+    }
+    <div class="flex items-center gap-1.5">
+      <dt>
+        <mat-icon class="sd-icon-sm" aria-hidden="true">flag</mat-icon
+        ><span class="sr-only">Nota mínima</span>
+      </dt>
+      <dd>Nota mínima {{ data.passingGrade | grade }}</dd>
+    </div>
+  </dl>
+
+  <!-- Progresso, salvamento e modo do Enter -->
+  <div
+    class="mb-4 flex flex-col gap-4 rounded-2xl border border-outline-variant bg-surface-lowest p-4 lg:flex-row lg:items-center"
+  >
+    <div class="flex-1">
+      <div class="mb-1 flex items-baseline justify-between text-sm">
+        <span class="font-semibold">Progresso</span>
+        <span class="tabular-nums"
+          >{{ progress().graded }} de {{ progress().total }} notas · {{ progress().percent }}%</span
+        >
+      </div>
+      <mat-progress-bar
+        mode="determinate"
+        [value]="progress().percent"
+        aria-label="Progresso da avaliação"
+      />
+    </div>
+
+    <div class="flex min-w-44 items-center gap-2 text-sm" aria-live="polite">
+      @switch (saveState()) {
+        @case ('saved') {
+          <mat-icon class="text-success" aria-hidden="true">cloud_done</mat-icon>
+          <span>Notas salvas</span>
+        }
+        @case ('pending') {
+          <mat-icon class="text-on-surface-variant" aria-hidden="true">edit_note</mat-icon>
+          <span>Alterações não salvas</span>
+        }
+        @case ('saving') {
+          <mat-icon class="animate-pulse text-on-surface-variant" aria-hidden="true"
+            >cloud_sync</mat-icon
+          >
+          <span>Salvando…</span>
+        }
+        @case ('error') {
+          <mat-icon class="text-error" aria-hidden="true">cloud_off</mat-icon>
+          <button matButton type="button" (click)="retrySave()">
+            Erro ao salvar · Tentar de novo
+          </button>
+        }
+      }
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <span id="enter-direction-label" class="text-xs text-on-surface-variant"
+        >Ao pressionar Enter, ir para</span
+      >
+      <mat-button-toggle-group
+        [value]="enterDirection()"
+        (change)="enterDirection.set($event.value)"
+        aria-labelledby="enter-direction-label"
+        hideSingleSelectionIndicator
+      >
+        <mat-button-toggle value="student">
+          <mat-icon class="mr-1" aria-hidden="true">arrow_forward</mat-icon>Próximo aluno
+        </mat-button-toggle>
+        <mat-button-toggle value="item">
+          <mat-icon class="mr-1" aria-hidden="true">arrow_downward</mat-icon>Próxima técnica
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+  </div>
+
+  <sd-grading-grid
+    [sections]="data.sections"
+    [participants]="data.participants"
+    [grades]="grades()"
+    [passingGrade]="data.passingGrade"
+    [editable]="true"
+    [enterDirection]="enterDirection()"
+    (gradeChange)="onGradeChange($event)"
+  />
+
+  <p class="mt-3 text-sm text-on-surface-variant">
+    Notas de 0 a 10 (aceita decimais, como 7,5). Deixe em branco o que ainda não foi avaliado — tudo
+    é salvo automaticamente.
+  </p>
+
+  <div
+    class="sticky bottom-16 z-10 -mx-4 mt-6 flex flex-col-reverse gap-2 border-t border-outline-variant bg-surface/90 px-4 py-3 backdrop-blur sm:flex-row sm:justify-end md:bottom-0"
+  >
+    <button matButton="outlined" type="button" (click)="onNextBlank()">
+      <mat-icon aria-hidden="true">edit_square</mat-icon>
+      Próxima nota em branco
+    </button>
+    <button matButton="filled" type="button" (click)="onComplete()" [disabled]="isCompleting()">
+      <mat-icon aria-hidden="true">{{ isCompleting() ? 'hourglass_top' : 'verified' }}</mat-icon>
+      {{ isCompleting() ? 'Finalizando…' : 'Finalizar prova' }}
+    </button>
+  </div>
+} @else {
+  <div class="space-y-4" aria-busy="true" aria-label="Carregando prova">
+    <div class="h-24 animate-pulse rounded-2xl bg-surface-container"></div>
+    <div class="h-96 animate-pulse rounded-2xl bg-surface-container"></div>
+  </div>
+}

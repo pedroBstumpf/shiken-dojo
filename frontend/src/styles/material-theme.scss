@@ -1,0 +1,58 @@
+@use '@angular/material' as mat;
+
+// Tema Material 3. As cores seguem `color-scheme` (light-dark()), então o ThemeService
+// só precisa trocar `color-scheme` no <html> para alternar entre claro e escuro.
+html {
+  color-scheme: light dark;
+
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$red-palette,
+        tertiary: mat.$orange-palette,
+      ),
+      typography: (
+        plain-family: 'Inter, system-ui, sans-serif',
+        brand-family: '"Shippori Mincho", "Noto Serif JP", serif',
+      ),
+      density: 0,
+    )
+  );
+
+  // Superfícies em tons de papel washi (claro) e tinta sumi (escuro).
+  @include mat.theme-overrides(
+    (
+      surface: light-dark(#faf6ee, #15120f),
+      surface-container-lowest: light-dark(#ffffff, #0f0d0b),
+      surface-container-low: light-dark(#f5efe3, #1b1714),
+      surface-container: light-dark(#efe8da, #221d19),
+      surface-container-high: light-dark(#e9e1d1, #2a241f),
+      surface-container-highest: light-dark(#e2d9c7, #332c26),
+      on-surface: light-dark(#1d1b18, #ece5d9),
+      on-surface-variant: light-dark(#4f4840, #cfc5b7),
+      outline: light-dark(#7d7368, #978d80),
+      outline-variant: light-dark(#d6ccbb, #4a423b),
+    )
+  );
+
+  @include mat.form-field-overrides(
+    (
+      outlined-container-shape: 10px,
+    )
+  );
+}
+
+body {
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+}
+
+// Botão de ação destrutiva (ex.: excluir).
+.sd-button-danger {
+  @include mat.button-overrides(
+    (
+      filled-container-color: var(--mat-sys-error),
+      filled-label-text-color: var(--mat-sys-on-error),
+    )
+  );
+}

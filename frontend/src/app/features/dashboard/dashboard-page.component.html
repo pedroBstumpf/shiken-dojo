@@ -1,0 +1,172 @@
+<!-- Abertura -->
+<section
+  class="sd-seigaiha relative mb-8 overflow-hidden rounded-3xl border border-outline-variant bg-surface-low p-6 sm:p-10"
+  aria-labelledby="welcome-title"
+>
+  <span
+    class="pointer-events-none absolute top-2 right-4 font-display text-8xl leading-none font-bold text-on-surface/5 select-none writing-vertical sm:text-9xl"
+    aria-hidden="true"
+    >空手道</span
+  >
+  <div class="relative flex flex-col items-start gap-6 md:flex-row md:items-center">
+    <sd-enso-logo [size]="112" class="hidden sm:block" />
+    <div class="max-w-xl">
+      <p class="font-display text-sm tracking-widest text-primary" aria-hidden="true">押忍 · OSU</p>
+      <h1 id="welcome-title" class="mt-1 text-3xl font-bold sm:text-4xl" tabindex="-1">
+        Bem-vindo ao dojo
+      </h1>
+      <p class="mt-3 text-on-surface-variant">
+        Organize seus alunos, aplique provas de faixa com a tabela de avaliação e mantenha o
+        histórico de cada graduação.
+      </p>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a matButton="filled" routerLink="/exams/new">
+          <mat-icon aria-hidden="true">sports_martial_arts</mat-icon>
+          Aplicar prova
+        </a>
+        <a matButton="outlined" routerLink="/students/new">
+          <mat-icon aria-hidden="true">person_add</mat-icon>
+          Cadastrar aluno
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+@if (error(); as error) {
+  <sd-error-state [message]="error.message" (retry)="reload()" />
+} @else if (isLoading()) {
+  <div
+    class="grid grid-cols-2 gap-4 lg:grid-cols-4"
+    aria-busy="true"
+    aria-label="Carregando painel"
+  >
+    @for (item of [1, 2, 3, 4]; track item) {
+      <div class="h-24 animate-pulse rounded-2xl bg-surface-container"></div>
+    }
+  </div>
+} @else {
+  <!-- Avaliações em andamento: o que o professor precisa retomar -->
+  @if (drafts().length > 0) {
+    <section
+      class="mb-8 rounded-2xl bg-tertiary-container p-4 text-on-tertiary-container sm:p-6"
+      aria-labelledby="drafts-title"
+    >
+      <h2 id="drafts-title" class="flex items-center gap-2 text-xl font-bold">
+        <mat-icon aria-hidden="true">pending_actions</mat-icon>
+        {{
+          drafts().length === 1
+            ? 'Uma avaliação em andamento'
+            : drafts().length + ' avaliações em andamento'
+        }}
+      </h2>
+      <p class="mt-1 mb-4 text-sm">As notas já lançadas estão salvas. Continue de onde parou.</p>
+      <ul class="grid gap-4 md:grid-cols-2">
+        @for (exam of drafts(); track exam.id) {
+          <li class="contents"><sd-exam-summary-card [exam]="exam" /></li>
+        }
+      </ul>
+    </section>
+  }
+
+  <!-- Números do dojo -->
+  <section aria-label="Resumo do dojo" class="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <a
+      routerLink="/students"
+      class="rounded-2xl border border-outline-variant bg-surface-lowest p-4 transition-colors hover:border-primary"
+    >
+      <p class="flex items-center gap-2 text-sm text-on-surface-variant">
+        <mat-icon class="sd-icon-sm" aria-hidden="true">groups</mat-icon> Alunos
+      </p>
+      <p class="mt-1 font-display text-3xl font-bold tabular-nums">{{ stats().students }}</p>
+    </a>
+    <a
+      routerLink="/history"
+      class="rounded-2xl border border-outline-variant bg-surface-lowest p-4 transition-colors hover:border-primary"
+    >
+      <p class="flex items-center gap-2 text-sm text-on-surface-variant">
+        <mat-icon class="sd-icon-sm" aria-hidden="true">history_edu</mat-icon> Provas concluídas
+      </p>
+      <p class="mt-1 font-display text-3xl font-bold tabular-nums">{{ stats().completedExams }}</p>
+    </a>
+    <div class="rounded-2xl border border-outline-variant bg-surface-lowest p-4">
+      <p class="flex items-center gap-2 text-sm text-on-surface-variant">
+        <mat-icon class="sd-icon-sm" aria-hidden="true">pending_actions</mat-icon> Em andamento
+      </p>
+      <p class="mt-1 font-display text-3xl font-bold tabular-nums">{{ stats().drafts }}</p>
+    </div>
+    <div class="rounded-2xl border border-outline-variant bg-surface-lowest p-4">
+      <p class="flex items-center gap-2 text-sm text-on-surface-variant">
+        <mat-icon class="sd-icon-sm" aria-hidden="true">workspace_premium</mat-icon> Taxa de
+        aprovação
+      </p>
+      <p class="mt-1 font-display text-3xl font-bold text-hanko tabular-nums">
+        {{ stats().approvalRate }}
+      </p>
+    </div>
+  </section>
+
+  <div class="grid gap-8 lg:grid-cols-3">
+    <!-- Provas recentes -->
+    <section class="lg:col-span-2" aria-labelledby="recent-title">
+      <div class="mb-4 flex items-baseline justify-between">
+        <h2 id="recent-title" class="text-2xl font-bold">Provas recentes</h2>
+        <a matButton routerLink="/history">Ver histórico</a>
+      </div>
+      @if (recentExams().length > 0) {
+        <ul class="grid gap-4 md:grid-cols-2">
+          @for (exam of recentExams(); track exam.id) {
+            <li class="contents"><sd-exam-summary-card [exam]="exam" /></li>
+          }
+        </ul>
+      } @else {
+        <p
+          class="rounded-2xl border border-dashed border-outline-variant p-6 text-center text-on-surface-variant"
+        >
+          Nenhuma prova concluída ainda.
+        </p>
+      }
+    </section>
+
+    <!-- Alunos por faixa -->
+    <section aria-labelledby="belts-title">
+      <div class="mb-4 flex items-baseline justify-between">
+        <h2 id="belts-title" class="text-2xl font-bold">Alunos por faixa</h2>
+        <a matButton routerLink="/students">Ver alunos</a>
+      </div>
+      @if (beltDistribution().length > 0) {
+        <ul class="space-y-3 rounded-2xl border border-outline-variant bg-surface-lowest p-4">
+          @for (entry of beltDistribution(); track entry.belt) {
+            <li>
+              <a
+                [routerLink]="['/students']"
+                [queryParams]="{ belt: entry.belt }"
+                class="-m-1 block rounded-lg p-1 hover:bg-surface-low"
+              >
+                <span class="mb-1 flex items-center justify-between text-sm">
+                  <sd-belt-badge [belt]="entry.belt" />
+                  <span class="font-semibold tabular-nums">{{ entry.count }}</span>
+                </span>
+                <span
+                  class="block h-2 overflow-hidden rounded-full bg-surface-container"
+                  aria-hidden="true"
+                >
+                  <span
+                    class="block h-full rounded-full bg-primary"
+                    [style.width.%]="entry.percent"
+                  ></span>
+                </span>
+              </a>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p
+          class="rounded-2xl border border-dashed border-outline-variant p-6 text-center text-on-surface-variant"
+        >
+          Nenhum aluno cadastrado.
+        </p>
+      }
+    </section>
+  </div>
+}

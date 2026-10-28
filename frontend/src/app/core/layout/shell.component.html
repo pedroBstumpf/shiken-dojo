@@ -1,0 +1,95 @@
+<a
+  href="#conteudo"
+  class="sd-no-print sr-only z-50 rounded-lg bg-primary px-4 py-2 text-on-primary focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+  >Pular para o conteúdo</a
+>
+
+<header class="sd-no-print sticky top-0 z-20 border-b border-outline-variant bg-surface-low">
+  <div class="sd-seigaiha">
+    <div class="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
+      <a
+        routerLink="/"
+        class="flex items-center gap-3 rounded-lg"
+        aria-label="Shiken Dojo — página inicial"
+      >
+        <sd-enso-logo [size]="40" />
+        <span class="flex flex-col leading-tight">
+          <span class="font-display text-lg font-bold text-on-surface">Shiken Dojo</span>
+          <span
+            class="font-display text-xs tracking-widest text-on-surface-variant"
+            aria-hidden="true"
+            >試験道場</span
+          >
+        </span>
+      </a>
+
+      <!-- O wrapper controla a visibilidade: o display do mat-tab-nav-bar venceria o "hidden" do Tailwind. -->
+      <div class="ml-auto hidden md:block">
+        <nav mat-tab-nav-bar [tabPanel]="tabPanel" aria-label="Navegação principal">
+          @for (link of links; track link.path) {
+            <a
+              mat-tab-link
+              [routerLink]="link.path"
+              routerLinkActive
+              #rla="routerLinkActive"
+              [routerLinkActiveOptions]="{ exact: link.exact }"
+              [active]="rla.isActive"
+            >
+              <mat-icon class="mr-2" aria-hidden="true">{{ link.icon }}</mat-icon>
+              {{ link.label }}
+            </a>
+          }
+        </nav>
+      </div>
+
+      <button
+        matIconButton
+        type="button"
+        class="ml-auto md:ml-2"
+        (click)="theme.toggle()"
+        [matTooltip]="theme.isDark() ? 'Usar modo claro' : 'Usar modo escuro'"
+        [attr.aria-label]="theme.isDark() ? 'Usar modo claro' : 'Usar modo escuro'"
+      >
+        <mat-icon aria-hidden="true">{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+    </div>
+  </div>
+</header>
+
+<mat-tab-nav-panel #tabPanel class="flex-1">
+  <main id="conteudo" class="mx-auto w-full max-w-7xl px-4 pt-6 pb-28 sm:px-6 md:pb-12 lg:px-8">
+    <router-outlet />
+  </main>
+</mat-tab-nav-panel>
+
+<footer
+  class="sd-no-print hidden border-t border-outline-variant py-6 text-center text-sm text-on-surface-variant md:block"
+>
+  <p>
+    <span class="mr-2 font-display text-on-surface" lang="ja">空手に先手なし</span>
+    <span>Karate ni sente nashi — no karatê, não existe primeiro ataque.</span>
+  </p>
+</footer>
+
+<!-- Navegação inferior no celular: fica na zona do polegar. -->
+<nav
+  class="sd-no-print fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-outline-variant bg-surface-low pb-[env(safe-area-inset-bottom)] md:hidden"
+  aria-label="Navegação principal"
+>
+  @for (link of links; track link.path) {
+    <a
+      [routerLink]="link.path"
+      routerLinkActive="text-primary is-active"
+      [routerLinkActiveOptions]="{ exact: link.exact }"
+      ariaCurrentWhenActive="page"
+      class="group flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium text-on-surface-variant"
+    >
+      <span
+        class="grid h-8 w-16 place-items-center rounded-full transition-colors group-[.is-active]:bg-primary-container group-[.is-active]:text-on-primary-container"
+      >
+        <mat-icon aria-hidden="true">{{ link.icon }}</mat-icon>
+      </span>
+      {{ link.shortLabel }}
+    </a>
+  }
+</nav>

@@ -1,0 +1,39 @@
+@import 'tailwindcss';
+
+/* Cores e fontes do Tailwind apontam para os tokens do Material,
+   assim tudo responde ao mesmo tema e ao modo escuro. */
+@theme inline {
+  --color-primary: var(--mat-sys-primary);
+  --color-on-primary: var(--mat-sys-on-primary);
+  --color-primary-container: var(--mat-sys-primary-container);
+  --color-on-primary-container: var(--mat-sys-on-primary-container);
+  --color-tertiary: var(--mat-sys-tertiary);
+  --color-tertiary-container: var(--mat-sys-tertiary-container);
+  --color-on-tertiary-container: var(--mat-sys-on-tertiary-container);
+  --color-surface: var(--mat-sys-surface);
+  --color-surface-lowest: var(--mat-sys-surface-container-lowest);
+  --color-surface-low: var(--mat-sys-surface-container-low);
+  --color-surface-container: var(--mat-sys-surface-container);
+  --color-surface-high: var(--mat-sys-surface-container-high);
+  --color-surface-highest: var(--mat-sys-surface-container-highest);
+  --color-on-surface: var(--mat-sys-on-surface);
+  --color-on-surface-variant: var(--mat-sys-on-surface-variant);
+  --color-outline: var(--mat-sys-outline);
+  --color-outline-variant: var(--mat-sys-outline-variant);
+  --color-error: var(--mat-sys-error);
+  --color-error-container: var(--mat-sys-error-container);
+  --color-on-error-container: var(--mat-sys-on-error-container);
+  --color-success: var(--sd-success);
+  --color-success-container: var(--sd-success-container);
+  --color-on-success-container: var(--sd-on-success-container);
+  --color-ink: var(--sd-ink);
+  --color-hanko: var(--sd-hanko);
+
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-display: 'Shippori Mincho', 'Noto Serif JP', serif;
+}
+
+/* Texto vertical, como em placas e caligrafia japonesas. */
+@utility writing-vertical {
+  writing-mode: vertical-rl;
+}

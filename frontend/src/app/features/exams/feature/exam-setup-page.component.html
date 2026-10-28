@@ -1,0 +1,266 @@
+<sd-page-header
+  title="Aplicar prova"
+  kanji="試験"
+  kanjiReading="shiken"
+  description="Escolha a tabela de avaliação e os alunos. Depois é só preencher as notas."
+>
+  <a actions matButton="outlined" routerLink="/history">
+    <mat-icon aria-hidden="true">history_edu</mat-icon>
+    Ver histórico
+  </a>
+</sd-page-header>
+
+@if (templates.error() ?? students.error(); as error) {
+  <sd-error-state [message]="error.message" (retry)="templates.reload(); students.reload()" />
+} @else if (templates.isLoading() || students.isLoading()) {
+  <div
+    class="h-96 animate-pulse rounded-2xl bg-surface-container"
+    aria-busy="true"
+    aria-label="Carregando"
+  ></div>
+} @else if (students.value()?.length === 0) {
+  <sd-empty-state
+    title="Cadastre alunos primeiro"
+    description="Para aplicar uma prova, é preciso ter alunos cadastrados no dojo."
+    actionLabel="Cadastrar aluno"
+    actionIcon="person_add"
+    (action)="onCreateStudent()"
+  />
+} @else {
+  <mat-stepper
+    linear
+    [orientation]="isNarrow() ? 'vertical' : 'horizontal'"
+    class="overflow-hidden rounded-2xl border border-outline-variant"
+  >
+    <!-- 1. Dados da prova -->
+    <mat-step [stepControl]="detailsForm" label="Dados da prova">
+      <form [formGroup]="detailsForm" class="space-y-6 pt-2" novalidate>
+        <fieldset>
+          <legend class="mb-3 font-semibold">Tabela de avaliação</legend>
+          <mat-radio-group formControlName="templateId" class="grid gap-3 md:grid-cols-2">
+            @for (option of templateOptions(); track option.template.id) {
+              <mat-radio-button
+                [value]="option.template.id"
+                class="rounded-xl border border-outline-variant p-3 transition-colors"
+                [class.border-primary]="templateId() === option.template.id"
+                [class.bg-primary-container]="templateId() === option.template.id"
+              >
+                <span class="flex flex-col gap-1 py-1">
+                  <span class="font-semibold">{{ option.template.name }}</span>
+                  <sd-belt-transition
+                    [from]="option.template.fromBelt"
+                    [to]="option.template.toBelt"
+                  />
+                  <span class="text-sm text-on-surface-variant">{{
+                    option.template.description
+                  }}</span>
+                  <span class="text-xs text-on-surface-variant">
+                    {{ option.template.sections.length }} blocos · {{ option.itemCount }} itens
+                    avaliados
+                  </span>
+                </span>
+              </mat-radio-button>
+            }
+          </mat-radio-group>
+        </fieldset>
+
+        <fieldset class="grid gap-4 md:grid-cols-2">
+          <legend class="mb-3 font-semibold md:col-span-2">Informações do exame</legend>
+
+          <mat-form-field>
+            <mat-label>Data da prova</mat-label>
+            <input matInput [matDatepicker]="datePicker" formControlName="date" />
+            <mat-hint>dd/mm/aaaa</mat-hint>
+            <mat-datepicker-toggle matIconSuffix [for]="datePicker" />
+            <mat-datepicker #datePicker />
+            <mat-error>{{ detailsForm.controls.date.errors | fieldError }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Nota mínima para aprovação</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="passingGrade"
+              min="0"
+              max="10"
+              step="0.5"
+            />
+            <mat-hint>A média geral precisa atingir este valor (0 a 10)</mat-hint>
+            <mat-error>{{ detailsForm.controls.passingGrade.errors | fieldError }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Examinador(a)</mat-label>
+            <input matInput formControlName="examinerName" autocomplete="name" maxlength="120" />
+            <mat-error>{{ detailsForm.controls.examinerName.errors | fieldError }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Local</mat-label>
+            <input matInput formControlName="location" maxlength="120" />
+            <mat-hint>Opcional · ex.: Dojo central</mat-hint>
+            <mat-error>{{ detailsForm.controls.location.errors | fieldError }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="md:col-span-2">
+            <mat-label>Observações</mat-label>
+            <textarea matInput formControlName="notes" rows="2" maxlength="500"></textarea>
+            <mat-hint>Opcional</mat-hint>
+            <mat-error>{{ detailsForm.controls.notes.errors | fieldError }}</mat-error>
+          </mat-form-field>
+        </fieldset>
+
+        <div class="flex justify-end">
+          <button
+            matButton="filled"
+            matStepperNext
+            type="button"
+            (click)="detailsForm.markAllAsTouched()"
+          >
+            Escolher alunos
+            <mat-icon iconPositionEnd aria-hidden="true">arrow_forward</mat-icon>
+          </button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- 2. Alunos -->
+    <mat-step [stepControl]="studentsForm" label="Alunos">
+      <div class="flex flex-col gap-3 pt-2 md:flex-row md:items-center">
+        <mat-form-field class="w-full md:max-w-xs">
+          <mat-label>Buscar aluno</mat-label>
+          <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+          <input
+            matInput
+            type="search"
+            [value]="search()"
+            (input)="onSearch($event)"
+            autocomplete="off"
+          />
+        </mat-form-field>
+        @if (fromBeltLabel()) {
+          <mat-slide-toggle [checked]="onlyFromBelt()" (change)="onlyFromBelt.set($event.checked)">
+            Somente faixa {{ fromBeltLabel() }}
+          </mat-slide-toggle>
+        }
+        <div class="flex items-center gap-1 md:ml-auto">
+          <button matButton type="button" (click)="selectVisible()">Selecionar todos</button>
+          <button
+            matButton
+            type="button"
+            (click)="clearSelection()"
+            [disabled]="selectedStudents().length === 0"
+          >
+            Limpar
+          </button>
+        </div>
+      </div>
+
+      <p class="mb-2 text-sm text-on-surface-variant" aria-live="polite">
+        <strong class="text-on-surface">{{ selectedStudents().length }}</strong>
+        {{ selectedStudents().length === 1 ? 'aluno selecionado' : 'alunos selecionados' }}
+      </p>
+
+      @if (studentOptions().length > 0) {
+        <mat-selection-list
+          class="max-h-112 overflow-auto rounded-xl border border-outline-variant"
+          aria-label="Alunos que farão a prova"
+          (selectionChange)="onSelectionChange($event)"
+        >
+          @for (option of studentOptions(); track option.student.id) {
+            <mat-list-option
+              [value]="option.student.id"
+              [selected]="option.selected"
+              togglePosition="before"
+            >
+              <span matListItemTitle>{{ option.student.fullName }}</span>
+              <span matListItemLine><sd-belt-badge [belt]="option.student.belt" /></span>
+            </mat-list-option>
+          }
+        </mat-selection-list>
+      } @else {
+        <p
+          class="rounded-xl border border-dashed border-outline-variant p-6 text-center text-on-surface-variant"
+        >
+          Nenhum aluno encontrado.
+          @if (onlyFromBelt() && fromBeltLabel()) {
+            <button matButton type="button" (click)="onlyFromBelt.set(false)">
+              Mostrar todas as faixas
+            </button>
+          }
+        </p>
+      }
+
+      @if (studentsForm.controls.studentIds.touched && studentsForm.invalid) {
+        <p class="mt-2 text-sm text-error" role="alert">
+          Selecione pelo menos um aluno para continuar.
+        </p>
+      }
+
+      <div class="mt-6 flex justify-between">
+        <button matButton matStepperPrevious type="button">Voltar</button>
+        <button
+          matButton="filled"
+          matStepperNext
+          type="button"
+          (click)="studentsForm.markAllAsTouched()"
+        >
+          Revisar
+          <mat-icon iconPositionEnd aria-hidden="true">arrow_forward</mat-icon>
+        </button>
+      </div>
+    </mat-step>
+
+    <!-- 3. Revisão -->
+    <mat-step label="Revisão">
+      <div class="grid gap-6 pt-2 lg:grid-cols-2">
+        <section aria-labelledby="review-details">
+          <h2 id="review-details" class="mb-3 text-lg font-bold">Dados da prova</h2>
+          <dl
+            class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-xl bg-surface-low p-4 text-sm"
+          >
+            <dt class="text-on-surface-variant">Tabela</dt>
+            <dd>{{ selectedTemplate()?.name }}</dd>
+            <dt class="text-on-surface-variant">Data</dt>
+            <dd>{{ detailsForm.controls.date.value | date: 'longDate' }}</dd>
+            <dt class="text-on-surface-variant">Examinador(a)</dt>
+            <dd>{{ detailsForm.controls.examinerName.value }}</dd>
+            <dt class="text-on-surface-variant">Local</dt>
+            <dd>{{ detailsForm.controls.location.value || '—' }}</dd>
+            <dt class="text-on-surface-variant">Nota mínima</dt>
+            <dd>{{ detailsForm.controls.passingGrade.value | grade }}</dd>
+          </dl>
+        </section>
+
+        <section aria-labelledby="review-students">
+          <h2 id="review-students" class="mb-3 text-lg font-bold">Ordem dos alunos na tabela</h2>
+          <ol class="max-h-72 space-y-2 overflow-auto rounded-xl bg-surface-low p-4 text-sm">
+            @for (student of selectedStudents(); track student.id; let index = $index) {
+              <li class="flex items-center gap-3">
+                <span
+                  class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-surface-high text-xs font-bold"
+                >
+                  {{ index + 1 }}
+                </span>
+                <sd-initials-avatar [name]="student.fullName" [size]="28" />
+                <span class="flex-1 truncate">{{ student.fullName }}</span>
+                <sd-belt-badge [belt]="student.belt" [showLabel]="false" />
+              </li>
+            }
+          </ol>
+        </section>
+      </div>
+
+      <div class="mt-6 flex justify-between">
+        <button matButton matStepperPrevious type="button">Voltar</button>
+        <button matButton="filled" type="button" (click)="onStart()" [disabled]="isCreating()">
+          <mat-icon aria-hidden="true">{{
+            isCreating() ? 'hourglass_top' : 'sports_martial_arts'
+          }}</mat-icon>
+          {{ isCreating() ? 'Preparando…' : 'Iniciar avaliação' }}
+        </button>
+      </div>
+    </mat-step>
+  </mat-stepper>
+}

@@ -1,0 +1,50 @@
+:host {
+  --stamp-color: var(--sd-hanko);
+}
+
+:host([data-status='failed']) {
+  --stamp-color: var(--mat-sys-on-surface-variant);
+}
+
+:host([data-status='pending']) {
+  --stamp-color: var(--mat-sys-outline);
+}
+
+.stamp {
+  display: grid;
+  place-items: center;
+  min-width: 3.5rem;
+  height: 3.5rem;
+  padding: 0 0.35rem;
+  border: 3px solid var(--stamp-color);
+  border-radius: 10px;
+  box-shadow:
+    inset 0 0 0 2px var(--mat-sys-surface),
+    inset 0 0 0 3.5px var(--stamp-color);
+  color: var(--stamp-color);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  transform: rotate(-8deg);
+}
+
+:host([data-status='pending']) .stamp {
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.stamp--small {
+  min-width: 2.5rem;
+  height: 2.5rem;
+  border-width: 2px;
+  font-size: 0.8rem;
+}
+
+.label {
+  color: var(--stamp-color);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

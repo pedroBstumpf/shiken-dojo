@@ -1,0 +1,92 @@
+/* Tokens do projeto que não existem no Material. */
+:root {
+  --sd-ink: light-dark(#1d1b18, #ece5d9);
+  --sd-success: light-dark(#2e6b30, #8fd68f);
+  --sd-success-container: light-dark(#d4ecd0, #1f3a20);
+  --sd-on-success-container: light-dark(#0f2c10, #c8eec3);
+  --sd-hanko: light-dark(#c62828, #ff6b5f);
+  --sd-ease-out: cubic-bezier(0.2, 0, 0, 1);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+}
+
+/* Padrão seigaiha (ondas) usado como textura sutil em faixas decorativas. */
+.sd-seigaiha {
+  --wave: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+  background-image:
+    radial-gradient(
+      circle at 100% 150%,
+      transparent 24%,
+      var(--wave) 25%,
+      var(--wave) 28%,
+      transparent 29%,
+      transparent 36%,
+      var(--wave) 37%,
+      var(--wave) 40%,
+      transparent 41%
+    ),
+    radial-gradient(
+      circle at 0 150%,
+      transparent 24%,
+      var(--wave) 25%,
+      var(--wave) 28%,
+      transparent 29%,
+      transparent 36%,
+      var(--wave) 37%,
+      var(--wave) 40%,
+      transparent 41%
+    );
+  background-size: 48px 24px;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important; /* exceção: acessibilidade precisa vencer qualquer animação */
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  .sd-no-print {
+    display: none !important; /* exceção: impressão precisa esconder a navegação */
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+}
+
+/* Tamanhos de ícone. Especificidade dupla para vencer o estilo padrão do mat-icon. */
+.mat-icon.sd-icon-sm {
+  width: 1rem;
+  height: 1rem;
+  font-size: 1rem;
+}
+
+.mat-icon.sd-icon-lg {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 2.5rem;
+}

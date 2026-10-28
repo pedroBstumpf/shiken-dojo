@@ -1,0 +1,136 @@
+@if (exam.error(); as error) {
+  <sd-page-header title="Resultado da prova" kanji="記録" kanjiReading="kiroku" />
+  <sd-error-state [message]="error.message" (retry)="exam.reload()" />
+} @else if (exam.value(); as data) {
+  <sd-page-header
+    title="Resultado da prova"
+    kanji="記録"
+    kanjiReading="kiroku"
+    [description]="data.templateName"
+  >
+    @if (data.status === 'draft') {
+      <a actions matButton="filled" [routerLink]="['/exams', data.id, 'grade']">
+        <mat-icon aria-hidden="true">edit_square</mat-icon>
+        Continuar avaliação
+      </a>
+    }
+    <button actions matButton="outlined" type="button" class="sd-no-print" (click)="onPrint()">
+      <mat-icon aria-hidden="true">print</mat-icon>
+      Imprimir
+    </button>
+    <a actions matButton routerLink="/history" class="sd-no-print">
+      <mat-icon aria-hidden="true">arrow_back</mat-icon>
+      Histórico
+    </a>
+  </sd-page-header>
+
+  <!-- Dados da prova -->
+  <dl
+    class="mb-6 grid gap-4 rounded-2xl border border-outline-variant bg-surface-lowest p-4 text-sm sm:grid-cols-2 lg:grid-cols-5"
+  >
+    <div>
+      <dt class="text-on-surface-variant">Faixas</dt>
+      <dd class="mt-1"><sd-belt-transition [from]="data.fromBelt" [to]="data.toBelt" /></dd>
+    </div>
+    <div>
+      <dt class="text-on-surface-variant">Data</dt>
+      <dd class="mt-1 font-semibold">{{ data.date | date: 'longDate' }}</dd>
+    </div>
+    <div>
+      <dt class="text-on-surface-variant">Examinador(a)</dt>
+      <dd class="mt-1 font-semibold">{{ data.examinerName }}</dd>
+    </div>
+    <div>
+      <dt class="text-on-surface-variant">Local</dt>
+      <dd class="mt-1 font-semibold">{{ data.location || '—' }}</dd>
+    </div>
+    <div>
+      <dt class="text-on-surface-variant">Situação</dt>
+      <dd class="mt-1 font-semibold">
+        @if (data.completedAt; as completedAt) {
+          Finalizada em {{ completedAt | date: 'short' }}
+        } @else {
+          Em andamento
+        }
+      </dd>
+    </div>
+  </dl>
+
+  <!-- Números da turma -->
+  <section aria-label="Resumo da turma" class="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div class="rounded-2xl bg-surface-low p-4">
+      <p class="text-sm text-on-surface-variant">Participantes</p>
+      <p class="mt-1 font-display text-3xl font-bold tabular-nums">{{ stats().participants }}</p>
+    </div>
+    <div class="rounded-2xl bg-surface-low p-4">
+      <p class="text-sm text-on-surface-variant">Aprovados</p>
+      <p class="mt-1 font-display text-3xl font-bold text-hanko tabular-nums">
+        {{ stats().approved }}
+      </p>
+    </div>
+    <div class="rounded-2xl bg-surface-low p-4">
+      <p class="text-sm text-on-surface-variant">Reprovados</p>
+      <p class="mt-1 font-display text-3xl font-bold tabular-nums">{{ stats().failed }}</p>
+    </div>
+    <div class="rounded-2xl bg-surface-low p-4">
+      <p class="text-sm text-on-surface-variant">
+        Média da turma <span class="text-xs">(mín. {{ data.passingGrade | grade }})</span>
+      </p>
+      <p class="mt-1 font-display text-3xl font-bold tabular-nums">{{ stats().classAverage }}</p>
+    </div>
+  </section>
+
+  <!-- Resultado por aluno -->
+  <section aria-labelledby="results-title" class="mb-10">
+    <h2 id="results-title" class="mb-4 text-2xl font-bold">Resultado por aluno</h2>
+    <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      @for (item of results(); track item.participant.studentId) {
+        <li
+          class="flex items-center gap-4 rounded-2xl border border-outline-variant bg-surface-lowest p-4"
+        >
+          <sd-initials-avatar [name]="item.participant.fullName" [size]="44" />
+          <div class="min-w-0 flex-1">
+            <p class="truncate font-semibold">
+              <span class="mr-1 text-sm text-on-surface-variant">{{ item.number }}.</span
+              >{{ item.participant.fullName }}
+            </p>
+            <sd-belt-badge [belt]="item.participant.belt" class="mt-1" />
+            <p class="mt-1 text-sm text-on-surface-variant">
+              Média <strong class="text-on-surface tabular-nums">{{ item.averageText }}</strong>
+              @if (item.result.status === 'approved') {
+                · apto(a) à faixa {{ toBeltLabel() }}
+              }
+            </p>
+          </div>
+          <sd-hanko-stamp [status]="item.result.status" />
+        </li>
+      }
+    </ul>
+  </section>
+
+  <!-- Tabela completa -->
+  <section aria-labelledby="grid-title" class="mb-8">
+    <h2 id="grid-title" class="mb-1 text-2xl font-bold">Tabela de notas</h2>
+    <p class="sd-no-print mb-4 text-sm text-on-surface-variant">
+      Passe o mouse sobre uma nota para destacar o aluno e a técnica.
+    </p>
+    <sd-grading-grid
+      [sections]="data.sections"
+      [participants]="data.participants"
+      [grades]="data.grades"
+      [passingGrade]="data.passingGrade"
+    />
+  </section>
+
+  @if (data.notes) {
+    <section aria-labelledby="notes-title" class="rounded-2xl bg-surface-low p-4">
+      <h2 id="notes-title" class="mb-2 text-lg font-bold">Observações</h2>
+      <p class="whitespace-pre-line">{{ data.notes }}</p>
+    </section>
+  }
+} @else {
+  <div class="space-y-4" aria-busy="true" aria-label="Carregando prova">
+    <div class="h-24 animate-pulse rounded-2xl bg-surface-container"></div>
+    <div class="h-64 animate-pulse rounded-2xl bg-surface-container"></div>
+  </div>
+}
