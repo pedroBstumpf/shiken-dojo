@@ -8,6 +8,20 @@ const envSchema = z.object({
   HOST: z.string().default('127.0.0.1'),
   PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+  /** Quantos proxies confiáveis existem na frente da API (0 = acesso direto). Define o IP do cliente. */
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
+  /** Origens com CORS liberado, separadas por vírgula. Vazio = mesma origem apenas. */
+  CORS_ORIGINS: z
+    .string()
+    .default('')
+    .transform((value) =>
+      value
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    )
+    .pipe(z.array(z.url({ protocol: /^https?$/ }))),
+  RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(10).default(300),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -18,6 +32,10 @@ export interface AppConfig {
   readonly host: string;
   readonly port: number;
   readonly logLevel: Env['LOG_LEVEL'];
+  /** Quantos saltos de proxy são confiáveis para descobrir o IP do cliente. */
+  readonly trustProxyHops: number;
+  readonly corsOrigins: readonly string[];
+  readonly globalRateLimitPerMinute: number;
 }
 
 export class ConfigError extends Error {
@@ -42,5 +60,8 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     host: env.HOST,
     port: env.PORT,
     logLevel: env.LOG_LEVEL,
+    trustProxyHops: env.TRUST_PROXY_HOPS,
+    corsOrigins: env.CORS_ORIGINS,
+    globalRateLimitPerMinute: env.RATE_LIMIT_PER_MINUTE,
   };
 }
