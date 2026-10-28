@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+
+# Segredos locais: nunca versionar (use .env.example como modelo).
+.env
+.env.*
+!.env.example
+
+# Banco de desenvolvimento, e-mails gerados em dev e outros arquivos locais.
+.local/
