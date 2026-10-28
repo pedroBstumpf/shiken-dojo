@@ -21,6 +21,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatStepperModule } from '@angular/material/stepper';
 import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '@core/auth/auth.service';
 import { NotificationService } from '@core/notifications/notification.service';
 import { ExamApiService } from '@shared/data-access/exams/exam-api.service';
 import { ExamTemplate } from '@shared/data-access/exams/exam.model';
@@ -76,6 +77,7 @@ export class ExamSetupPageComponent {
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationService);
   private readonly fb = inject(NonNullableFormBuilder);
+  private readonly auth = inject(AuthService);
 
   protected readonly templates = rxResource({ stream: () => this.examApi.listTemplates() });
   protected readonly students = rxResource({ stream: () => this.studentApi.list() });
@@ -178,12 +180,15 @@ export class ExamSetupPageComponent {
       }
     });
 
-    // Com um só professor ativo, ele já vem como examinador.
+    // O professor logado já vem como examinador (ou o único professor ativo, se for o caso).
     effect(() => {
       const options = this.examinerOptions();
-      if (options.length === 1 && !this.detailsForm.controls.examinerId.value) {
-        this.detailsForm.controls.examinerId.setValue(options[0]!.teacher.id);
-      }
+      if (this.detailsForm.controls.examinerId.value) return;
+      const loggedId = this.auth.session()?.teacher.id;
+      const preferred =
+        options.find((option) => option.teacher.id === loggedId) ??
+        (options.length === 1 ? options[0] : undefined);
+      if (preferred) this.detailsForm.controls.examinerId.setValue(preferred.teacher.id);
     });
   }
 

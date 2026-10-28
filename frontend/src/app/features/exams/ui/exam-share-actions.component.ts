@@ -78,7 +78,7 @@ export class ExamShareActionsComponent {
         if (!delivery) return;
         this.notifications.success(
           delivery.simulated
-            ? `Envio simulado para ${delivery.recipientEmail}: o servidor de e-mail ainda não existe.`
+            ? `Envio simulado para ${delivery.recipientEmail}: o servidor ainda não tem um provedor de e-mail configurado.`
             : `PDF enviado para ${delivery.recipientEmail}.`,
         );
       });
