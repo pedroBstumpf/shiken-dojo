@@ -17,6 +17,10 @@ export const authGuard: CanActivateFn = (_route, state) => {
   );
 };
 
+/** Telas de gestão de professores: só o sensei responsável (a API também recusa, com 403). */
+export const headInstructorGuard: CanActivateFn = () =>
+  inject(AuthService).isHeadInstructor() ? true : inject(Router).createUrlTree(['/teachers']);
+
 /** Login e convite: quem já está logado vai direto para o início. */
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);

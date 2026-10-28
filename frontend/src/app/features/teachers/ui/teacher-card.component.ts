@@ -27,12 +27,16 @@ import { formatPhone } from '@shared/utils/phone.utils';
   template: `
     <sd-initials-avatar [name]="teacher().fullName" [size]="48" />
     <div class="min-w-0 flex-1">
-      <!-- O link cobre o card inteiro (after:absolute), sem aninhar o botão de menu dentro dele. -->
-      <a
-        [routerLink]="['/teachers', teacher().id, 'edit']"
-        class="block truncate font-semibold text-on-surface after:absolute after:inset-0 after:rounded-2xl focus:outline-none"
-        >{{ teacher().fullName }}</a
-      >
+      @if (canManage()) {
+        <!-- O link cobre o card inteiro (after:absolute), sem aninhar o botão de menu dentro dele. -->
+        <a
+          [routerLink]="['/teachers', teacher().id, 'edit']"
+          class="block truncate font-semibold text-on-surface after:absolute after:inset-0 after:rounded-2xl focus:outline-none"
+          >{{ teacher().fullName }}</a
+        >
+      } @else {
+        <p class="truncate font-semibold text-on-surface">{{ teacher().fullName }}</p>
+      }
       <p class="mt-1 flex flex-wrap items-center gap-2 text-sm">
         <span
           class="rounded-full px-2 py-0.5 text-xs font-semibold"
@@ -43,6 +47,11 @@ import { formatPhone } from '@shared/utils/phone.utils';
         >
         @if (!teacher().active) {
           <span class="rounded-full border border-outline px-2 py-0.5 text-xs">Inativo</span>
+        } @else if (teacher().invitationPending) {
+          <span
+            class="rounded-full bg-tertiary-container px-2 py-0.5 text-xs text-on-tertiary-container"
+            >Convite pendente</span
+          >
         }
       </p>
       <p class="mt-2 flex items-center gap-2 text-sm">
@@ -79,31 +88,42 @@ import { formatPhone } from '@shared/utils/phone.utils';
         }
       </dl>
     </div>
-    <button
-      matIconButton
-      type="button"
-      class="relative z-10 -mt-1 -mr-2"
-      [matMenuTriggerFor]="menu"
-      [attr.aria-label]="'Ações para ' + teacher().fullName"
-    >
-      <mat-icon aria-hidden="true">more_vert</mat-icon>
-    </button>
-    <mat-menu #menu="matMenu" xPosition="before">
-      <a mat-menu-item [routerLink]="['/teachers', teacher().id, 'edit']">
-        <mat-icon aria-hidden="true">edit</mat-icon>
-        Editar
-      </a>
-      <button mat-menu-item type="button" (click)="removed.emit(teacher())">
-        <mat-icon aria-hidden="true">delete</mat-icon>
-        Excluir
+    @if (canManage()) {
+      <button
+        matIconButton
+        type="button"
+        class="relative z-10 -mt-1 -mr-2"
+        [matMenuTriggerFor]="menu"
+        [attr.aria-label]="'Ações para ' + teacher().fullName"
+      >
+        <mat-icon aria-hidden="true">more_vert</mat-icon>
       </button>
-    </mat-menu>
+      <mat-menu #menu="matMenu" xPosition="before">
+        <a mat-menu-item [routerLink]="['/teachers', teacher().id, 'edit']">
+          <mat-icon aria-hidden="true">edit</mat-icon>
+          Editar
+        </a>
+        @if (teacher().active && teacher().invitationPending) {
+          <button mat-menu-item type="button" (click)="invitationResent.emit(teacher())">
+            <mat-icon aria-hidden="true">forward_to_inbox</mat-icon>
+            Reenviar convite
+          </button>
+        }
+        <button mat-menu-item type="button" (click)="removed.emit(teacher())">
+          <mat-icon aria-hidden="true">delete</mat-icon>
+          Excluir
+        </button>
+      </mat-menu>
+    }
   `,
 })
 export class TeacherCardComponent {
   readonly teacher = input.required<Teacher>();
+  /** Só o sensei responsável edita, exclui e reenvia convites. */
+  readonly canManage = input(false);
 
   readonly removed = output<Teacher>();
+  readonly invitationResent = output<Teacher>();
 
   protected readonly roleLabel = computed(() => TEACHER_ROLE_INFO[this.teacher().role].label);
   protected readonly danLabel = computed(() => formatDan(this.teacher().dan));

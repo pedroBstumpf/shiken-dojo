@@ -35,6 +35,11 @@ export class TeacherApiService {
       .pipe(map(toTeacher));
   }
 
+  /** Reenvia o convite de acesso por e-mail (o link anterior deixa de valer). */
+  resendInvitation(id: string): Observable<void> {
+    return this.http.post<void>(`${this.teacherUrl(id)}/invitation`, {});
+  }
+
   remove(id: string): Observable<void> {
     return this.http.delete<void>(this.teacherUrl(id));
   }

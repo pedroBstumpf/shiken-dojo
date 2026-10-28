@@ -4,10 +4,12 @@
   kanjiReading="sensei"
   description="Quem ensina no dojo e pode ser examinador nas provas de faixa."
 >
-  <a actions matButton="filled" routerLink="/teachers/new">
-    <mat-icon aria-hidden="true">person_add</mat-icon>
-    Cadastrar professor
-  </a>
+  @if (auth.isHeadInstructor()) {
+    <a actions matButton="filled" routerLink="/teachers/new">
+      <mat-icon aria-hidden="true">person_add</mat-icon>
+      Cadastrar professor
+    </a>
+  }
 </sd-page-header>
 
 @if (store.error(); as error) {
@@ -26,7 +28,7 @@
   <sd-empty-state
     title="Nenhum professor cadastrado"
     description="Cadastre os professores do dojo. Eles aparecem como examinadores ao aplicar uma prova."
-    actionLabel="Cadastrar primeiro professor"
+    [actionLabel]="auth.isHeadInstructor() ? 'Cadastrar primeiro professor' : ''"
     actionIcon="person_add"
     (action)="onCreate()"
   />
@@ -57,7 +59,12 @@
     <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Professores">
       @for (teacher of filteredTeachers(); track teacher.id) {
         <li class="contents">
-          <sd-teacher-card [teacher]="teacher" (removed)="store.remove($event)" />
+          <sd-teacher-card
+            [teacher]="teacher"
+            [canManage]="auth.isHeadInstructor()"
+            (removed)="store.remove($event)"
+            (invitationResent)="store.resendInvitation($event)"
+          />
         </li>
       }
     </ul>

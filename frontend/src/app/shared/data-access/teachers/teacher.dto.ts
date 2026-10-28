@@ -11,9 +11,14 @@ export interface TeacherDto {
   readonly dan: number | null;
   readonly federationId: string;
   readonly active: boolean;
+  /** true enquanto o professor não aceitou o convite (ainda não definiu a senha). */
+  readonly invitationPending: boolean;
   /** ISO-8601 em UTC */
   readonly createdAt: string;
   readonly updatedAt: string;
 }
 
-export type TeacherWriteDto = Omit<TeacherDto, 'id' | 'createdAt' | 'updatedAt'>;
+export type TeacherWriteDto = Omit<
+  TeacherDto,
+  'id' | 'invitationPending' | 'createdAt' | 'updatedAt'
+>;

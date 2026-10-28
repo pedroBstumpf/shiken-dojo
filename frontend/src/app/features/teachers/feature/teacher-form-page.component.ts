@@ -169,7 +169,9 @@ export class TeacherFormPageComponent implements CanLeave {
       next: (teacher) => {
         this.form.markAsPristine();
         this.notifications.success(
-          this.isEdit() ? 'Cadastro atualizado.' : `${teacher.fullName} foi cadastrado(a).`,
+          this.isEdit()
+            ? 'Cadastro atualizado.'
+            : `${teacher.fullName} foi cadastrado(a). O convite de acesso foi enviado para ${teacher.email}.`,
         );
         void this.router.navigate(['/teachers']);
       },

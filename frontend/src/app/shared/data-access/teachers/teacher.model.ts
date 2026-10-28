@@ -34,12 +34,14 @@ export interface Teacher {
   readonly federationId: string;
   /** Inativos continuam no histórico, mas não podem ser escolhidos como examinadores. */
   readonly active: boolean;
+  /** Ainda não aceitou o convite: não consegue entrar no sistema. */
+  readonly invitationPending: boolean;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
 
-/** Campos editáveis. Senha NÃO faz parte do cadastro: o acesso será enviado por convite (ver docs). */
-export type TeacherInput = Omit<Teacher, 'id' | 'createdAt' | 'updatedAt'>;
+/** Campos editáveis. Senha NÃO faz parte do cadastro: o acesso é enviado por convite. */
+export type TeacherInput = Omit<Teacher, 'id' | 'invitationPending' | 'createdAt' | 'updatedAt'>;
 
 export function formatDan(dan: number | null): string {
   return dan === null ? '' : `${dan}º Dan`;

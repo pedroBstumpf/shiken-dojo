@@ -5,6 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '@core/auth/auth.service';
 import { EmptyStateComponent } from '@shared/ui/empty-state.component';
 import { ErrorStateComponent } from '@shared/ui/error-state.component';
 import { PageHeaderComponent } from '@shared/ui/page-header.component';
@@ -39,6 +40,7 @@ const STATUS_FILTERS: readonly { value: StatusFilter; label: string }[] = [
 export class TeacherListPageComponent {
   private readonly router = inject(Router);
   protected readonly store = inject(TeacherStore);
+  protected readonly auth = inject(AuthService);
 
   /** Filtros vêm da URL (?q=&status=). */
   readonly q = input('', { transform: emptyIfMissing });

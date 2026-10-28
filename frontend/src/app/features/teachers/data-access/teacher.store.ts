@@ -59,6 +59,13 @@ export class TeacherStore {
       });
   }
 
+  resendInvitation(teacher: Teacher): void {
+    this.api.resendInvitation(teacher.id).subscribe({
+      next: () => this.notifications.success(`Convite reenviado para ${teacher.email}.`),
+      error: (error: ApiError) => this.notifications.error(error.message),
+    });
+  }
+
   private restore(teacher: Teacher): void {
     this._teachers.update((list) =>
       [...list, teacher].sort((a, b) => a.fullName.localeCompare(b.fullName, 'pt-BR')),

@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { headInstructorGuard } from '@core/auth/auth.guard';
 import { canLeaveGuard } from '@shared/guards/can-leave.guard';
 
 export const TEACHERS_ROUTES: Routes = [
@@ -11,6 +12,7 @@ export const TEACHERS_ROUTES: Routes = [
   {
     path: 'new',
     title: 'Cadastrar professor',
+    canActivate: [headInstructorGuard],
     canDeactivate: [canLeaveGuard],
     loadComponent: () =>
       import('./feature/teacher-form-page.component').then((m) => m.TeacherFormPageComponent),
@@ -18,6 +20,7 @@ export const TEACHERS_ROUTES: Routes = [
   {
     path: ':id/edit',
     title: 'Editar professor',
+    canActivate: [headInstructorGuard],
     canDeactivate: [canLeaveGuard],
     loadComponent: () =>
       import('./feature/teacher-form-page.component').then((m) => m.TeacherFormPageComponent),
