@@ -14,10 +14,12 @@ import {
 } from '@shared/data-access/exams/exam.dto';
 import { gradingProgress, studentResult } from '@shared/data-access/exams/exam-scoring';
 import { StudentDto, StudentWriteDto } from '@shared/data-access/students/student.dto';
+import { TeacherDto, TeacherWriteDto } from '@shared/data-access/teachers/teacher.dto';
+import { DAN_LEVELS, TEACHER_ROLES, TeacherRole } from '@shared/data-access/teachers/teacher.model';
 import { isBelt } from '@shared/models/belt.model';
 import { ProblemDetailsDto } from '@shared/models/api-error.model';
 import { Paginated } from '@shared/models/paginated.model';
-import { isValidGrade } from '@shared/utils/grade.utils';
+import { GRADE_MAX, GRADE_MIN, isValidGrade } from '@shared/utils/grade.utils';
 import { mergeMap, Observable, of, throwError, timer } from 'rxjs';
 import { MockDbService } from './mock-db.service';
 
@@ -63,6 +65,14 @@ function route(db: MockDbService, req: HttpRequest<unknown>, path: string): Mock
   const [resource, id, action] = segments;
   const method = req.method;
 
+  if (resource === 'teachers') {
+    if (!id && method === 'GET') return ok(page(sortByName(db.read().teachers)));
+    if (!id && method === 'POST') return createTeacher(db, req.body);
+    if (id && !action && method === 'GET') return findTeacher(db, id);
+    if (id && !action && method === 'PUT') return updateTeacher(db, id, req.body);
+    if (id && !action && method === 'DELETE') return deleteTeacher(db, id);
+  }
+
   if (resource === 'students') {
     if (!id && method === 'GET') return ok(page(sortByName(db.read().students)));
     if (!id && method === 'POST') return createStudent(db, req.body);
@@ -85,6 +95,90 @@ function route(db: MockDbService, req: HttpRequest<unknown>, path: string): Mock
   }
 
   return problem(404, 'NOT_FOUND', 'Recurso não encontrado.');
+}
+
+// ---------- Professores ----------
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateTeacher(
+  db: MockDbService,
+  body: unknown,
+  id?: string,
+): TeacherWriteDto | MockResult {
+  const input = (body ?? {}) as Partial<TeacherWriteDto>;
+  const errors: Record<string, string> = {};
+  const fullName = typeof input.fullName === 'string' ? input.fullName.trim() : '';
+  const email = typeof input.email === 'string' ? input.email.trim().toLowerCase() : '';
+  const phone = typeof input.phone === 'string' ? input.phone : '';
+  const federationId = typeof input.federationId === 'string' ? input.federationId.trim() : '';
+
+  if (fullName.length < 2 || fullName.length > 120)
+    errors['fullName'] = 'Informe o nome completo (2 a 120 caracteres).';
+  if (!EMAIL_PATTERN.test(email) || email.length > 254) errors['email'] = 'E-mail inválido.';
+  if (phone !== '' && !/^\d{10,11}$/.test(phone)) errors['phone'] = 'Telefone inválido.';
+  if (!TEACHER_ROLES.includes(input.role as TeacherRole)) errors['role'] = 'Função inválida.';
+  if (!isBelt(input.belt)) errors['belt'] = 'Faixa inválida.';
+  if (input.belt === 'preta' && !DAN_LEVELS.includes(input.dan as (typeof DAN_LEVELS)[number]))
+    errors['dan'] = 'Informe o grau (dan) da faixa preta.';
+  if (federationId.length > 30) errors['federationId'] = 'Máximo de 30 caracteres.';
+  if (typeof input.active !== 'boolean') errors['active'] = 'Situação inválida.';
+
+  if (Object.keys(errors).length > 0 || !isBelt(input.belt)) {
+    return problem(422, 'VALIDATION_FAILED', 'Alguns campos precisam ser corrigidos.', errors);
+  }
+  if (db.read().teachers.some((t) => t.email === email && t.id !== id)) {
+    return problem(409, 'EMAIL_TAKEN', 'Já existe um professor com este e-mail.', {
+      email: 'Este e-mail já está cadastrado para outro professor.',
+    });
+  }
+  return {
+    fullName,
+    email,
+    phone,
+    role: input.role as TeacherRole,
+    belt: input.belt,
+    dan: input.belt === 'preta' ? (input.dan ?? null) : null,
+    federationId,
+    active: input.active === true,
+  };
+}
+
+function createTeacher(db: MockDbService, body: unknown): MockResult {
+  const input = validateTeacher(db, body);
+  if (isMockResult(input)) return input;
+  const now = new Date().toISOString();
+  const teacher: TeacherDto = { ...input, id: crypto.randomUUID(), createdAt: now, updatedAt: now };
+  db.write((state) => state.teachers.push(teacher));
+  return { status: 201, body: teacher };
+}
+
+function findTeacher(db: MockDbService, id: string): MockResult {
+  const teacher = db.read().teachers.find((t) => t.id === id);
+  return teacher ? ok(teacher) : problem(404, 'TEACHER_NOT_FOUND', 'Professor não encontrado.');
+}
+
+function updateTeacher(db: MockDbService, id: string, body: unknown): MockResult {
+  const index = db.read().teachers.findIndex((t) => t.id === id);
+  if (index < 0) return problem(404, 'TEACHER_NOT_FOUND', 'Professor não encontrado.');
+  const input = validateTeacher(db, body, id);
+  if (isMockResult(input)) return input;
+  const updated: TeacherDto = {
+    ...db.read().teachers[index]!,
+    ...input,
+    updatedAt: new Date().toISOString(),
+  };
+  db.write((state) => (state.teachers[index] = updated));
+  return ok(updated);
+}
+
+function deleteTeacher(db: MockDbService, id: string): MockResult {
+  if (!db.read().teachers.some((t) => t.id === id)) {
+    return problem(404, 'TEACHER_NOT_FOUND', 'Professor não encontrado.');
+  }
+  // Provas guardam o nome do examinador, então o histórico continua íntegro.
+  db.write((state) => (state.teachers = state.teachers.filter((t) => t.id !== id)));
+  return { status: 204, body: null };
 }
 
 // ---------- Alunos ----------
@@ -203,13 +297,13 @@ function createExam(db: MockDbService, body: unknown): MockResult {
   if (!template) errors['templateId'] = 'Selecione uma tabela de avaliação.';
   if (typeof input.date !== 'string' || !DATE_PATTERN.test(input.date))
     errors['date'] = 'Data inválida.';
-  if (typeof input.examinerName !== 'string' || input.examinerName.trim().length < 2)
-    errors['examinerName'] = 'Informe o examinador.';
+  const examiner = state.teachers.find((t) => t.id === input.examinerId && t.active);
+  if (!examiner) errors['examinerId'] = 'Selecione um professor ativo como examinador.';
   if (!isValidGrade(input.passingGrade))
-    errors['passingGrade'] = 'A nota mínima deve estar entre 0 e 10.';
+    errors['passingGrade'] = `A nota mínima deve estar entre ${GRADE_MIN} e ${GRADE_MAX}.`;
   if (participants.length === 0 || participants.length !== studentIds.length)
     errors['studentIds'] = 'Selecione alunos válidos.';
-  if (!template || Object.keys(errors).length > 0) {
+  if (!template || !examiner || Object.keys(errors).length > 0) {
     return problem(422, 'VALIDATION_FAILED', 'Alguns campos precisam ser corrigidos.', errors);
   }
 
@@ -224,7 +318,8 @@ function createExam(db: MockDbService, body: unknown): MockResult {
     sections: template.sections,
     date: input.date!,
     location: (input.location ?? '').trim(),
-    examinerName: input.examinerName!.trim(),
+    examinerId: examiner.id,
+    examinerName: examiner.fullName,
     passingGrade: input.passingGrade!,
     notes: (input.notes ?? '').trim(),
     participants,
@@ -311,8 +406,8 @@ function page<T>(items: readonly T[]): Paginated<T> {
   return { items, nextCursor: null, hasMore: false };
 }
 
-function sortByName(students: readonly StudentDto[]): StudentDto[] {
-  return [...students].sort((a, b) => a.fullName.localeCompare(b.fullName, 'pt-BR'));
+function sortByName<T extends { readonly fullName: string }>(people: readonly T[]): T[] {
+  return [...people].sort((a, b) => a.fullName.localeCompare(b.fullName, 'pt-BR'));
 }
 
 function problem(

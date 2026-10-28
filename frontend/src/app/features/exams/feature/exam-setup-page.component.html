@@ -10,9 +10,12 @@
   </a>
 </sd-page-header>
 
-@if (templates.error() ?? students.error(); as error) {
-  <sd-error-state [message]="error.message" (retry)="templates.reload(); students.reload()" />
-} @else if (templates.isLoading() || students.isLoading()) {
+@if (templates.error() ?? students.error() ?? teachers.error(); as error) {
+  <sd-error-state
+    [message]="error.message"
+    (retry)="templates.reload(); students.reload(); teachers.reload()"
+  />
+} @else if (templates.isLoading() || students.isLoading() || teachers.isLoading()) {
   <div
     class="h-96 animate-pulse rounded-2xl bg-surface-container"
     aria-busy="true"
@@ -25,6 +28,14 @@
     actionLabel="Cadastrar aluno"
     actionIcon="person_add"
     (action)="onCreateStudent()"
+  />
+} @else if (examinerOptions().length === 0) {
+  <sd-empty-state
+    title="Cadastre um professor primeiro"
+    description="Toda prova precisa de um examinador. Cadastre (ou reative) um professor do dojo."
+    actionLabel="Cadastrar professor"
+    actionIcon="person_add"
+    (action)="onCreateTeacher()"
   />
 } @else {
   <mat-stepper
@@ -83,17 +94,25 @@
               type="number"
               formControlName="passingGrade"
               min="0"
-              max="10"
+              max="3"
               step="0.5"
             />
-            <mat-hint>A média geral precisa atingir este valor (0 a 10)</mat-hint>
+            <mat-hint>A média geral precisa atingir este valor (0 a 3)</mat-hint>
             <mat-error>{{ detailsForm.controls.passingGrade.errors | fieldError }}</mat-error>
           </mat-form-field>
 
           <mat-form-field>
             <mat-label>Examinador(a)</mat-label>
-            <input matInput formControlName="examinerName" autocomplete="name" maxlength="120" />
-            <mat-error>{{ detailsForm.controls.examinerName.errors | fieldError }}</mat-error>
+            <mat-select formControlName="examinerId">
+              @for (option of examinerOptions(); track option.teacher.id) {
+                <mat-option [value]="option.teacher.id">
+                  {{ option.teacher.fullName }}
+                  <span class="text-sm text-on-surface-variant"> · {{ option.detail }}</span>
+                </mat-option>
+              }
+            </mat-select>
+            <mat-hint>Professores ativos do dojo</mat-hint>
+            <mat-error>{{ detailsForm.controls.examinerId.errors | fieldError }}</mat-error>
           </mat-form-field>
 
           <mat-form-field>
@@ -225,7 +244,7 @@
             <dt class="text-on-surface-variant">Data</dt>
             <dd>{{ detailsForm.controls.date.value | date: 'longDate' }}</dd>
             <dt class="text-on-surface-variant">Examinador(a)</dt>
-            <dd>{{ detailsForm.controls.examinerName.value }}</dd>
+            <dd>{{ selectedExaminer()?.fullName }}</dd>
             <dt class="text-on-surface-variant">Local</dt>
             <dd>{{ detailsForm.controls.location.value || '—' }}</dd>
             <dt class="text-on-surface-variant">Nota mínima</dt>

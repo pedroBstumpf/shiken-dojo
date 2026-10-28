@@ -21,7 +21,7 @@ export function toExamCreateDto(setup: ExamSetup): ExamCreateDto {
     templateId: setup.templateId,
     date: toIsoDate(setup.date),
     location: setup.location.trim(),
-    examinerName: setup.examinerName.trim(),
+    examinerId: setup.examinerId,
     passingGrade: setup.passingGrade,
     notes: setup.notes.trim(),
     studentIds: setup.studentIds,

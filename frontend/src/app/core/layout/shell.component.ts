@@ -43,6 +43,13 @@ export class ShellComponent {
     { path: '/', label: 'Início', shortLabel: 'Início', icon: 'temple_buddhist', exact: true },
     { path: '/students', label: 'Alunos', shortLabel: 'Alunos', icon: 'groups', exact: false },
     {
+      path: '/teachers',
+      label: 'Professores',
+      shortLabel: 'Senseis',
+      icon: 'person_book',
+      exact: false,
+    },
+    {
       path: '/exams',
       label: 'Aplicar prova',
       shortLabel: 'Prova',

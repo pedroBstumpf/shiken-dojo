@@ -1,10 +1,20 @@
 import { Injectable } from '@angular/core';
 import { ExamDto, ExamTemplateDto } from '@shared/data-access/exams/exam.dto';
 import { StudentDto } from '@shared/data-access/students/student.dto';
-import { createSeedExam, createSeedStudents, SEED_TEMPLATES } from './mock-seed';
+import { TeacherDto } from '@shared/data-access/teachers/teacher.dto';
+import {
+  createSeedExam,
+  createSeedStudents,
+  createSeedTeachers,
+  SEED_TEMPLATES,
+} from './mock-seed';
+
+/** Aumente quando o formato mudar: dados antigos no navegador são descartados e recriados. */
+const DB_VERSION = 2;
 
 export interface MockDbState {
-  readonly version: 1;
+  readonly version: typeof DB_VERSION;
+  teachers: TeacherDto[];
   students: StudentDto[];
   templates: ExamTemplateDto[];
   exams: ExamDto[];
@@ -39,7 +49,7 @@ export class MockDbService {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as MockDbState;
-        if (parsed.version === 1) {
+        if (parsed.version === DB_VERSION) {
           return parsed;
         }
       }
@@ -51,12 +61,14 @@ export class MockDbService {
 
   private seed(): MockDbState {
     const now = new Date().toISOString();
+    const teachers = createSeedTeachers(now);
     const students = createSeedStudents(now);
     return {
-      version: 1,
+      version: DB_VERSION,
+      teachers,
       students,
       templates: [...SEED_TEMPLATES],
-      exams: [createSeedExam(students, now)],
+      exams: [createSeedExam(students, teachers[0]!, now)],
     };
   }
 }

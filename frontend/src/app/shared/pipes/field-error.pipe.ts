@@ -16,6 +16,8 @@ export class FieldErrorPipe implements PipeTransform {
     if (errors['max']) return `O valor máximo é ${errors['max'].max}.`;
     if (errors['matDatepickerParse']) return 'Data inválida. Use o formato dd/mm/aaaa.';
     if (errors['futureDate']) return 'A data não pode estar no futuro.';
+    if (errors['email']) return 'Informe um e-mail válido, como nome@exemplo.com.';
+    if (errors['phone']) return 'Informe o telefone com DDD, como (11) 98765-4321.';
     return 'Valor inválido.';
   }
 }

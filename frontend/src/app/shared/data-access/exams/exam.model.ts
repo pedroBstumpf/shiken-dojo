@@ -49,6 +49,8 @@ export interface Exam {
   readonly sections: readonly ExamSection[];
   readonly date: Date;
   readonly location: string;
+  readonly examinerId: string;
+  /** Retrato do nome do examinador no dia da prova. */
   readonly examinerName: string;
   readonly passingGrade: number;
   readonly notes: string;
@@ -78,7 +80,7 @@ export interface ExamSetup {
   readonly templateId: string;
   readonly date: Date;
   readonly location: string;
-  readonly examinerName: string;
+  readonly examinerId: string;
   readonly passingGrade: number;
   readonly notes: string;
   readonly studentIds: readonly string[];

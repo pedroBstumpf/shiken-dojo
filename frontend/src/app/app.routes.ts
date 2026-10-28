@@ -9,6 +9,10 @@ export const routes: Routes = [
       import('@features/dashboard/dashboard-page.component').then((m) => m.DashboardPageComponent),
   },
   {
+    path: 'teachers',
+    loadChildren: () => import('@features/teachers/teachers.routes').then((m) => m.TEACHERS_ROUTES),
+  },
+  {
     path: 'students',
     loadChildren: () => import('@features/students/students.routes').then((m) => m.STUDENTS_ROUTES),
   },

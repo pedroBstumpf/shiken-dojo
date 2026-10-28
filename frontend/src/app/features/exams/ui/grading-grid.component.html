@@ -19,7 +19,7 @@
       >
     }
     <span class="ml-auto hidden text-xs opacity-70 lg:inline">
-      Setas para navegar · Enter:
+      Notas de 0 a {{ gradeMax }} · Setas para navegar · Enter:
       {{ enterDirection() === 'student' ? 'próximo aluno' : 'próxima técnica' }} · Esc desfaz
     </span>
   </div>
@@ -28,7 +28,11 @@
 <div class="grid-scroll" (mouseleave)="onMouseLeave()">
   <table>
     <caption class="sr-only">
-      Notas de 0 a 10 por técnica (linhas) e por aluno (colunas)
+      Notas de 0 a
+      {{
+        gradeMax
+      }}
+      por técnica (linhas) e por aluno (colunas)
     </caption>
     <thead>
       <tr>
@@ -66,6 +70,7 @@
               <td
                 [class.is-active-col]="active()?.col === cell.col"
                 [class.is-invalid]="cell.invalid"
+                [class.is-rejected]="rejectedKey() === cell.key"
                 (mouseenter)="onHover(row.row, cell.col)"
               >
                 @if (editable()) {
@@ -74,12 +79,13 @@
                     type="text"
                     inputmode="decimal"
                     autocomplete="off"
-                    maxlength="4"
+                    maxlength="3"
                     [value]="cell.text"
                     [attr.data-cell]="row.row + ':' + cell.col"
                     [attr.aria-label]="cell.ariaLabel"
                     [attr.aria-invalid]="cell.invalid"
                     (focus)="onFocus($event, row.row, cell.col)"
+                    (beforeinput)="onBeforeInput($event, cell)"
                     (blur)="onCommit($event, cell)"
                     (keydown)="onKeydown($event, row.row, cell.col, cell)"
                   />

@@ -1,0 +1,73 @@
+<sd-page-header
+  title="Professores"
+  kanji="先生"
+  kanjiReading="sensei"
+  description="Quem ensina no dojo e pode ser examinador nas provas de faixa."
+>
+  <a actions matButton="filled" routerLink="/teachers/new">
+    <mat-icon aria-hidden="true">person_add</mat-icon>
+    Cadastrar professor
+  </a>
+</sd-page-header>
+
+@if (store.error(); as error) {
+  <sd-error-state [message]="error" (retry)="store.load()" />
+} @else if (store.isFirstLoad()) {
+  <div
+    class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+    aria-busy="true"
+    aria-label="Carregando professores"
+  >
+    @for (item of skeletons; track item) {
+      <div class="h-40 animate-pulse rounded-2xl bg-surface-container"></div>
+    }
+  </div>
+} @else if (store.teachers().length === 0) {
+  <sd-empty-state
+    title="Nenhum professor cadastrado"
+    description="Cadastre os professores do dojo. Eles aparecem como examinadores ao aplicar uma prova."
+    actionLabel="Cadastrar primeiro professor"
+    actionIcon="person_add"
+    (action)="onCreate()"
+  />
+} @else {
+  <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center">
+    <mat-form-field class="w-full lg:max-w-sm">
+      <mat-label>Buscar por nome ou e-mail</mat-label>
+      <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+      <input matInput type="search" [value]="q()" (input)="onSearch($event)" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-chip-listbox
+      aria-label="Filtrar por situação"
+      [value]="statusFilter()"
+      (change)="onStatusChange($event.value ?? null)"
+    >
+      @for (option of statusFilters; track option.value) {
+        <mat-chip-option [value]="option.value">{{ option.label }}</mat-chip-option>
+      }
+    </mat-chip-listbox>
+
+    <p class="text-sm text-on-surface-variant lg:ml-auto" aria-live="polite">
+      {{ filteredTeachers().length }} de {{ store.teachers().length }} professores
+    </p>
+  </div>
+
+  @if (filteredTeachers().length > 0) {
+    <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Professores">
+      @for (teacher of filteredTeachers(); track teacher.id) {
+        <li class="contents">
+          <sd-teacher-card [teacher]="teacher" (removed)="store.remove($event)" />
+        </li>
+      }
+    </ul>
+  } @else {
+    <sd-empty-state
+      title="Nenhum professor encontrado"
+      description="Nenhum professor corresponde aos filtros aplicados."
+      actionLabel="Limpar filtros"
+      actionIcon="filter_alt_off"
+      (action)="clearFilters()"
+    />
+  }
+}

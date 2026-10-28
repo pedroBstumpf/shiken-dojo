@@ -17,6 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule, MatSelectionListChange } from '@angular/material/list';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatStepperModule } from '@angular/material/stepper';
 import { Router, RouterLink } from '@angular/router';
@@ -24,6 +25,8 @@ import { NotificationService } from '@core/notifications/notification.service';
 import { ExamApiService } from '@shared/data-access/exams/exam-api.service';
 import { ExamTemplate } from '@shared/data-access/exams/exam.model';
 import { StudentApiService } from '@shared/data-access/students/student-api.service';
+import { TeacherApiService } from '@shared/data-access/teachers/teacher-api.service';
+import { formatDan, TEACHER_ROLE_INFO } from '@shared/data-access/teachers/teacher.model';
 import { ApiError } from '@shared/models/api-error.model';
 import { BELT_INFO } from '@shared/models/belt.model';
 import { FieldErrorPipe } from '@shared/pipes/field-error.pipe';
@@ -51,6 +54,7 @@ import { map } from 'rxjs';
     MatInputModule,
     MatListModule,
     MatRadioModule,
+    MatSelectModule,
     MatSlideToggleModule,
     MatStepperModule,
     PageHeaderComponent,
@@ -68,19 +72,21 @@ import { map } from 'rxjs';
 export class ExamSetupPageComponent {
   private readonly examApi = inject(ExamApiService);
   private readonly studentApi = inject(StudentApiService);
+  private readonly teacherApi = inject(TeacherApiService);
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationService);
   private readonly fb = inject(NonNullableFormBuilder);
 
   protected readonly templates = rxResource({ stream: () => this.examApi.listTemplates() });
   protected readonly students = rxResource({ stream: () => this.studentApi.list() });
+  protected readonly teachers = rxResource({ stream: () => this.teacherApi.list() });
 
   protected readonly detailsForm = this.fb.group({
     templateId: ['', Validators.required],
     date: this.fb.control<Date | null>(new Date(), Validators.required),
     location: ['', Validators.maxLength(120)],
-    examinerName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
-    passingGrade: [6, [Validators.required, Validators.min(GRADE_MIN), Validators.max(GRADE_MAX)]],
+    examinerId: ['', Validators.required],
+    passingGrade: [2, [Validators.required, Validators.min(GRADE_MIN), Validators.max(GRADE_MAX)]],
     notes: ['', Validators.maxLength(500)],
   });
 
@@ -104,6 +110,26 @@ export class ExamSetupPageComponent {
       template,
       itemCount: template.sections.reduce((count, section) => count + section.items.length, 0),
     })),
+  );
+
+  private readonly examinerId = toSignal(this.detailsForm.controls.examinerId.valueChanges, {
+    initialValue: this.detailsForm.controls.examinerId.value,
+  });
+
+  /** Só professores ativos podem ser examinadores. */
+  protected readonly examinerOptions = computed(() =>
+    (this.teachers.value() ?? [])
+      .filter((teacher) => teacher.active)
+      .map((teacher) => ({
+        teacher,
+        detail: [TEACHER_ROLE_INFO[teacher.role].label, formatDan(teacher.dan)]
+          .filter(Boolean)
+          .join(' · '),
+      })),
+  );
+
+  protected readonly selectedExaminer = computed(
+    () => this.examinerOptions().find((o) => o.teacher.id === this.examinerId())?.teacher,
   );
 
   protected readonly selectedTemplate = computed<ExamTemplate | undefined>(() =>
@@ -151,6 +177,18 @@ export class ExamSetupPageComponent {
         this.detailsForm.controls.templateId.setValue(templates[0]!.id);
       }
     });
+
+    // Com um só professor ativo, ele já vem como examinador.
+    effect(() => {
+      const options = this.examinerOptions();
+      if (options.length === 1 && !this.detailsForm.controls.examinerId.value) {
+        this.detailsForm.controls.examinerId.setValue(options[0]!.teacher.id);
+      }
+    });
+  }
+
+  protected onCreateTeacher(): void {
+    void this.router.navigate(['/teachers/new']);
   }
 
   protected onCreateStudent(): void {

@@ -1,6 +1,7 @@
 import { ExamDto, ExamTemplateDto } from '@shared/data-access/exams/exam.dto';
 import { GradeSheet } from '@shared/data-access/exams/exam.model';
 import { StudentDto } from '@shared/data-access/students/student.dto';
+import { TeacherDto } from '@shared/data-access/teachers/teacher.dto';
 import { Belt } from '@shared/models/belt.model';
 
 // Dados fictícios para desenvolvimento. Nunca use dados reais de alunos aqui.
@@ -79,6 +80,37 @@ const SEED_STUDENT_DATA: readonly [string, Belt, string | null, string | null][]
   ['Mateus Oliveira', 'branca', null, '2025-06-02'],
 ];
 
+export function createSeedTeachers(now: string): TeacherDto[] {
+  return [
+    {
+      id: 'tch-001',
+      fullName: 'Hiroshi Okada',
+      email: 'okada@dojo.exemplo',
+      phone: '11987654321',
+      role: 'head_instructor',
+      belt: 'preta',
+      dan: 4,
+      federationId: 'HKK-0042',
+      active: true,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: 'tch-002',
+      fullName: 'Mariana Costa',
+      email: 'mariana@dojo.exemplo',
+      phone: '',
+      role: 'instructor',
+      belt: 'preta',
+      dan: 1,
+      federationId: '',
+      active: true,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
+}
+
 export function createSeedStudents(now: string): StudentDto[] {
   return SEED_STUDENT_DATA.map(([fullName, belt, birthDate, enrollmentDate], index) => ({
     id: `stu-${String(index + 1).padStart(3, '0')}`,
@@ -93,7 +125,11 @@ export function createSeedStudents(now: string): StudentDto[] {
 }
 
 /** Uma prova já concluída, para o histórico não começar vazio. */
-export function createSeedExam(students: readonly StudentDto[], now: string): ExamDto {
+export function createSeedExam(
+  students: readonly StudentDto[],
+  examiner: TeacherDto,
+  now: string,
+): ExamDto {
   const template = SEED_TEMPLATES[0]!;
   const participants = students
     .filter((student) => student.belt === 'amarela' || student.belt === 'vermelha')
@@ -103,8 +139,8 @@ export function createSeedExam(students: readonly StudentDto[], now: string): Ex
   const grades: Record<string, Record<string, number>> = {};
   participants.forEach((participant, p) => {
     grades[participant.studentId] = Object.fromEntries(
-      // Notas determinísticas entre 5,5 e 9,5 para a demonstração.
-      allItems.map((item, i) => [item.id, 5.5 + (((p + 1) * 7 + i * 3) % 9) * 0.5]),
+      // Notas determinísticas entre 1 e 3 para a demonstração.
+      allItems.map((item, i) => [item.id, 1 + (((p + 1) * 7 + i * 3) % 5) * 0.5]),
     );
   });
 
@@ -118,8 +154,9 @@ export function createSeedExam(students: readonly StudentDto[], now: string): Ex
     sections: template.sections,
     date: '2026-06-20',
     location: 'Dojo central',
-    examinerName: 'Sensei Okada',
-    passingGrade: 6,
+    examinerId: examiner.id,
+    examinerName: examiner.fullName,
+    passingGrade: 2,
     notes: 'Exame semestral de junho.',
     participants,
     grades: grades as GradeSheet,

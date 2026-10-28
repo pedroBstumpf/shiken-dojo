@@ -18,7 +18,14 @@ import {
   GradeSheet,
 } from '@shared/data-access/exams/exam.model';
 import { BeltBadgeComponent } from '@shared/ui/belt-badge.component';
-import { formatGrade, formatScore, parseGrade } from '@shared/utils/grade.utils';
+import {
+  formatGrade,
+  formatScore,
+  GRADE_MAX,
+  GRADE_MIN,
+  isAcceptableGradeDraft,
+  parseGrade,
+} from '@shared/utils/grade.utils';
 import { shortName } from '@shared/utils/text.utils';
 
 export interface GradeChange {
@@ -111,6 +118,9 @@ export class GradingGridComponent {
   protected readonly active = signal<ActiveCell | null>(null);
   private readonly invalidKeys = signal<ReadonlySet<string>>(new Set());
 
+  protected readonly gradeMax = GRADE_MAX;
+  /** Célula onde um valor fora da escala acabou de ser bloqueado (pisca em vermelho). */
+  protected readonly rejectedKey = signal<string | null>(null);
   protected readonly passingGradeText = computed(() => formatGrade(this.passingGrade()));
 
   protected readonly columns = computed<readonly ColumnVm[]>(() =>
@@ -238,13 +248,31 @@ export class GradingGridComponent {
     }
   }
 
+  /** Impede digitar (ou colar) algo que não seja uma nota de 0 a 3. */
+  protected onBeforeInput(event: Event, cell: CellVm): void {
+    const { data } = event as InputEvent;
+    if (data === null) {
+      return; // apagar, recortar etc.
+    }
+    const input = event.target as HTMLInputElement;
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+    const next = input.value.slice(0, start) + data + input.value.slice(end);
+    if (!isAcceptableGradeDraft(next)) {
+      event.preventDefault();
+      this.rejectedKey.set(cell.key);
+      setTimeout(() => this.rejectedKey.set(null), 450);
+      void this.announcer.announce(`Use notas de ${GRADE_MIN} a ${GRADE_MAX}.`);
+    }
+  }
+
   protected onCommit(event: Event, cell: CellVm): void {
     const input = event.target as HTMLInputElement;
     const parsed = parseGrade(input.value);
     if (!parsed.ok) {
       this.setInvalid(cell.key, true);
       void this.announcer.announce(
-        'Nota inválida. Use valores de 0 a 10, por exemplo 7 ou 7,5.',
+        `Nota inválida. Use valores de ${GRADE_MIN} a ${GRADE_MAX}, por exemplo 2 ou 2,5.`,
         'assertive',
       );
       return;

@@ -35,7 +35,7 @@ describe('GradingGridComponent', () => {
     fixture.componentRef.setInput('sections', sections);
     fixture.componentRef.setInput('participants', participants);
     fixture.componentRef.setInput('grades', grades);
-    fixture.componentRef.setInput('passingGrade', 6);
+    fixture.componentRef.setInput('passingGrade', 2);
     fixture.componentRef.setInput('editable', true);
     changes = [];
     fixture.componentInstance.gradeChange.subscribe((change) => changes.push(change));
@@ -68,12 +68,12 @@ describe('GradingGridComponent', () => {
     await setup();
     const first = cell(0, 0);
     await focus(first);
-    first.value = '7,5';
+    first.value = '2,5';
     // Enter move o foco; o blur da célula anterior grava a nota.
     first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
     await fixture.whenStable();
 
-    expect(changes).toEqual([{ studentId: 's1', itemId: 'i1', value: 7.5 }]);
+    expect(changes).toEqual([{ studentId: 's1', itemId: 'i1', value: 2.5 }]);
     expect(document.activeElement).toBe(cell(0, 1));
   });
 
@@ -81,7 +81,7 @@ describe('GradingGridComponent', () => {
     await setup();
     const input = cell(0, 0);
     await focus(input);
-    input.value = '12';
+    input.value = '3,5';
     input.blur();
     await fixture.whenStable();
 
@@ -90,16 +90,35 @@ describe('GradingGridComponent', () => {
   });
 
   it('calcula totais, média e resultado de cada aluno', async () => {
-    await setup({ s1: { i1: 8, i2: 7 }, s2: { i1: 5 } });
+    await setup({ s1: { i1: 3, i2: 2 }, s2: { i1: 1 } });
     const text = element.querySelector('tfoot')!.textContent!;
-    expect(text).toContain('7,5');
+    expect(text).toContain('2,5');
     expect(text).toContain('Aprovado');
     expect(text).toContain('Pendente');
-    expect(element.querySelector('.total-row')!.textContent).toContain('15,0');
+    expect(element.querySelector('.total-row')!.textContent).toContain('5,0');
+  });
+
+  it('bloqueia a digitação de notas acima de 3', async () => {
+    await setup();
+    const input = cell(0, 0);
+    await focus(input);
+
+    const typeKey = (data: string): boolean =>
+      input.dispatchEvent(
+        new InputEvent('beforeinput', { data, inputType: 'insertText', cancelable: true }),
+      );
+    expect(typeKey('4')).toBe(false); // cancelado
+    expect(typeKey('3')).toBe(true);
+    input.value = '3';
+    input.setSelectionRange(1, 1);
+    expect(typeKey(',')).toBe(true);
+    input.value = '3,';
+    input.setSelectionRange(2, 2);
+    expect(typeKey('5')).toBe(false); // 3,5 passa de 3
   });
 
   it('leva o foco à primeira nota em branco', async () => {
-    await setup({ s1: { i1: 8, i2: 7 }, s2: { i1: 5 } });
+    await setup({ s1: { i1: 3, i2: 2 }, s2: { i1: 1 } });
     expect(fixture.componentInstance.focusFirstBlank()).toBe(true);
     expect(document.activeElement).toBe(cell(1, 1));
   });

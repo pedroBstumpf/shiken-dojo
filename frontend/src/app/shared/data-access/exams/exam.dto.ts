@@ -17,6 +17,7 @@ export interface ExamDto {
   /** yyyy-MM-dd */
   readonly date: string;
   readonly location: string;
+  readonly examinerId: string;
   readonly examinerName: string;
   readonly passingGrade: number;
   readonly notes: string;
@@ -47,7 +48,8 @@ export interface ExamCreateDto {
   readonly templateId: string;
   readonly date: string;
   readonly location: string;
-  readonly examinerName: string;
+  /** O servidor grava também o nome do professor (retrato para o histórico). */
+  readonly examinerId: string;
   readonly passingGrade: number;
   readonly notes: string;
   readonly studentIds: readonly string[];

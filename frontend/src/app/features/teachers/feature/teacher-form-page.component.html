@@ -1,0 +1,149 @@
+<sd-page-header
+  [title]="isEdit() ? 'Editar professor' : 'Cadastrar professor'"
+  kanji="師範"
+  kanjiReading="shihan · mestre"
+  description="Dados de contato, graduação e função no dojo."
+/>
+
+@if (teacher.error(); as error) {
+  <sd-error-state [message]="error.message" (retry)="teacher.reload()" />
+} @else if (teacher.isLoading()) {
+  <div class="max-w-3xl space-y-4" aria-busy="true" aria-label="Carregando cadastro">
+    @for (row of [1, 2, 3, 4, 5]; track row) {
+      <div class="h-14 animate-pulse rounded-xl bg-surface-container"></div>
+    }
+  </div>
+} @else {
+  <form
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+    class="max-w-3xl space-y-8 rounded-2xl border border-outline-variant bg-surface-lowest p-4 sm:p-6"
+    novalidate
+  >
+    <fieldset class="space-y-4">
+      <legend class="mb-4 text-lg font-semibold">Identificação e contato</legend>
+
+      <mat-form-field class="w-full">
+        <mat-label>Nome completo</mat-label>
+        <input matInput formControlName="fullName" autocomplete="name" maxlength="120" />
+        <mat-error>{{ form.controls.fullName.errors | fieldError }}</mat-error>
+      </mat-form-field>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <mat-form-field>
+          <mat-label>E-mail</mat-label>
+          <input
+            matInput
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            inputmode="email"
+            maxlength="254"
+          />
+          <mat-hint>Será usado para acessar o sistema</mat-hint>
+          <mat-error>{{ form.controls.email.errors | fieldError }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Telefone</mat-label>
+          <input
+            matInput
+            type="tel"
+            formControlName="phone"
+            autocomplete="tel-national"
+            inputmode="tel"
+            maxlength="16"
+            (blur)="onPhoneBlur()"
+          />
+          <mat-hint>Opcional · com DDD</mat-hint>
+          <mat-error>{{ form.controls.phone.errors | fieldError }}</mat-error>
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <fieldset class="space-y-4">
+      <legend class="mb-4 text-lg font-semibold">Graduação</legend>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <mat-form-field>
+          <mat-label>Faixa</mat-label>
+          <mat-select formControlName="belt">
+            <mat-select-trigger>
+              <sd-belt-badge [belt]="form.controls.belt.value" />
+            </mat-select-trigger>
+            @for (option of belts; track option.belt) {
+              <mat-option [value]="option.belt">
+                <sd-belt-badge [belt]="option.belt" />
+              </mat-option>
+            }
+          </mat-select>
+          <mat-error>{{ form.controls.belt.errors | fieldError }}</mat-error>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Grau (dan)</mat-label>
+          <mat-select formControlName="dan">
+            @for (option of danOptions; track option.dan) {
+              <mat-option [value]="option.dan">{{ option.label }}</mat-option>
+            }
+          </mat-select>
+          <mat-hint>{{
+            form.controls.dan.disabled ? 'Somente para faixa preta' : '1º a 10º Dan'
+          }}</mat-hint>
+          <mat-error>{{ form.controls.dan.errors | fieldError }}</mat-error>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field class="w-full sm:max-w-sm">
+        <mat-label>Registro na federação/associação</mat-label>
+        <input matInput formControlName="federationId" maxlength="30" autocomplete="off" />
+        <mat-hint>Opcional</mat-hint>
+        <mat-error>{{ form.controls.federationId.errors | fieldError }}</mat-error>
+      </mat-form-field>
+    </fieldset>
+
+    <fieldset>
+      <legend class="mb-4 text-lg font-semibold">Função no dojo</legend>
+      <mat-radio-group formControlName="role" class="grid gap-3 sm:grid-cols-2">
+        @for (option of roles; track option.role) {
+          <mat-radio-button
+            [value]="option.role"
+            class="rounded-xl border border-outline-variant p-3 transition-colors"
+            [class.border-primary]="form.controls.role.value === option.role"
+            [class.bg-primary-container]="form.controls.role.value === option.role"
+          >
+            <span class="flex flex-col gap-1 py-1">
+              <span class="font-semibold">{{ option.label }}</span>
+              <span class="text-sm text-on-surface-variant">{{ option.description }}</span>
+            </span>
+          </mat-radio-button>
+        }
+      </mat-radio-group>
+    </fieldset>
+
+    <fieldset>
+      <legend class="mb-3 text-lg font-semibold">Situação</legend>
+      <mat-slide-toggle formControlName="active">Professor(a) ativo(a)</mat-slide-toggle>
+      <p class="mt-2 text-sm text-on-surface-variant">
+        Professores inativos continuam no histórico, mas não aparecem como examinadores em novas
+        provas.
+      </p>
+    </fieldset>
+
+    <p class="flex gap-3 rounded-xl bg-surface-low p-4 text-sm text-on-surface-variant">
+      <mat-icon class="shrink-0" aria-hidden="true">lock</mat-icon>
+      <span>
+        Senhas não são cadastradas aqui. Quando o login estiver disponível, o professor receberá um
+        convite no e-mail informado para criar a própria senha.
+      </span>
+    </p>
+
+    <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <a matButton routerLink="/teachers">Cancelar</a>
+      <button matButton="filled" type="submit" [disabled]="isSaving()">
+        <mat-icon aria-hidden="true">{{ isSaving() ? 'hourglass_top' : 'save' }}</mat-icon>
+        {{ isSaving() ? 'Salvando…' : isEdit() ? 'Salvar alterações' : 'Cadastrar professor' }}
+      </button>
+    </div>
+  </form>
+}
