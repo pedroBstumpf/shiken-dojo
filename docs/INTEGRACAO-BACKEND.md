@@ -332,5 +332,6 @@ Pontos de atenção:
 - **Troca de senha** pelo próprio professor (com reautenticação e aviso por e-mail); hoje a redefinição é por novo convite.
 - **Row-Level Security** com `dojo_id` como segunda camada de isolamento.
 - **Rate limit compartilhado** (Redis) quando houver mais de uma instância da API.
-- **Pipeline de CI** (lint, testes com PostgreSQL, build, varredura de segredos e dependências) e deploy.
+- **CI/CD**: lint, testes com PostgreSQL, build e `npm audit` já rodam em `.github/workflows/ci.yml`;
+  faltam varredura de segredos, SAST, imagem de container e deploy.
 - **OIDC** como alternativa ao login próprio, se a associação adotar um provedor de identidade.
