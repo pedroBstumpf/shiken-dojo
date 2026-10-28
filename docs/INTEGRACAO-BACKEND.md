@@ -1,31 +1,24 @@
 # Integração Front-end ↔ Back-end
 
-> Este documento descreve **o que o back-end precisa entregar** para substituir a API simulada do front-end,
-> e os cuidados de segurança e privacidade específicos do Shiken Dojo.
-> Ele complementa o [BACKEND.md](./BACKEND.md) (regras gerais) e o [FRONTEND.md](./FRONTEND.md).
+> Contrato entre o front-end ([frontend/](../frontend/)) e a API ([backend/](../backend/)), e os
+> cuidados de segurança e privacidade específicos do Shiken Dojo.
+> Complementa o [BACKEND.md](./BACKEND.md) (regras gerais) e o [FRONTEND.md](./FRONTEND.md).
 
 ---
 
 ## 1. Situação atual
 
-O front-end já conversa com uma API REST de verdade via `HttpClient`. Enquanto o back-end não existe, um
-interceptor (`frontend/src/app/mock-api/`) responde às requisições e guarda os dados no `localStorage`.
+O front-end conversa com a API real via `HttpClient`. A API simulada (`mock-api/`, com dados no
+`localStorage`) foi removida.
 
 ```
-Componente → *ApiService (HttpClient) → errorInterceptor → mockApiInterceptor ─╳─ (back-end real)
-                                                            └─ localStorage (só em desenvolvimento)
+Componente → *ApiService (HttpClient) → authInterceptor → errorInterceptor → /api/v1 (Fastify) → PostgreSQL
 ```
 
-- Os serviços (`StudentApiService`, `ExamApiService`) **não sabem** que a API é simulada.
-- O mock segue o contrato abaixo: rotas, status HTTP, validações e erros no formato **Problem Details (RFC 9457)**.
-- ⚠️ O `localStorage` guarda nomes e datas de nascimento de alunos **apenas para desenvolvimento**. Isso não pode ir para produção.
-
-### Como trocar para a API real
-
-1. Implementar os endpoints da seção 2 no back-end.
-2. Em `frontend/src/environments/environment*.ts`, definir `useMockApi: false` (e `apiBaseUrl`, se for diferente de `/api/v1`).
-3. Em desenvolvimento, criar `frontend/proxy.conf.json` apontando `/api` para o servidor local e referenciá-lo no `angular.json` (`serve.options.proxyConfig`). Assim o front e a API ficam na mesma origem, sem CORS.
-4. Remover a pasta `src/app/mock-api/` e a referência a ela no `app.config.ts`.
+- Em desenvolvimento, o `ng serve` encaminha `/api` para `http://localhost:3000` (`frontend/proxy.conf.json`):
+  front e API ficam na mesma origem, sem CORS. Em produção, o proxy reverso faz o mesmo papel.
+- A sessão é um cookie `HttpOnly`; o front só guarda em memória quem está logado (`AuthService`).
+- Como rodar: [backend/README.md](../backend/README.md) e [frontend/README.md](../frontend/README.md).
 
 ---
 
@@ -58,7 +51,9 @@ interface TeacherWriteDto {
 // TeacherDto = TeacherWriteDto + { id, createdAt, updatedAt }
 ```
 
-- **Senha não trafega neste cadastro.** Ao criar um professor, o back-end envia um **convite por e-mail** com link de uso único (expira em horas) para ele definir a própria senha (ou entrar via OIDC).
+- **Senha não trafega neste cadastro.** Ao criar um professor, o back-end envia um **convite por e-mail** com link de uso único (72 h, token no fragmento `#token=`) para ele definir a própria senha em `/accept-invite`.
+- `TeacherDto` traz também `invitationPending` (ainda não definiu a senha). `POST /teachers/{id}/invitation` reenvia o convite (`202`, só `head_instructor`).
+- O dojo sempre mantém um `head_instructor` ativo (`409 LAST_HEAD_INSTRUCTOR`); ninguém exclui o próprio cadastro (`409 CANNOT_DELETE_SELF`).
 - Criar, editar e excluir professores deve ser permitido só ao papel `head_instructor` (`403` para os demais).
 - Na exclusão, provas antigas mantêm `examiner_name` (retrato). Preferir **desativar** a excluir.
 
@@ -83,6 +78,34 @@ interface StudentWriteDto {
 // StudentDto = StudentWriteDto + { id, createdAt, updatedAt }
 ```
 
+### Privacidade do aluno (LGPD)
+
+| Método | Rota | Sucesso | Erros |
+|---|---|---|---|
+| `GET` | `/students/{id}/export` | `200` JSON (cadastro + provas, como anexo) | `401`, `404` |
+| `POST` | `/students/{id}/erasure` | `204` (exclui e anonimiza o nome nas provas) | `401`, `403`, `404` |
+
+### Autenticação
+
+| Método | Rota | Corpo | Sucesso | Erros |
+|---|---|---|---|---|
+| `POST` | `/auth/login` | `{ email, password }` | `200` `SessionDto` + cookie de sessão | `401 INVALID_CREDENTIALS`, `403 CSRF_INVALID`, `429` |
+| `POST` | `/auth/logout` | — | `204` | `403 CSRF_INVALID` |
+| `GET` | `/auth/session` | — | `200` `SessionDto` | `401` |
+| `POST` | `/auth/invitations/accept` | `{ token, password }` | `200` `SessionDto` + cookie | `422 INVITATION_INVALID`, `422`, `429` |
+| `GET` | `/auth/sessions` | — | `200` `{ items: ActiveSessionDto[] }` | `401` |
+| `DELETE` | `/auth/sessions/{id}` | — | `204` | `401`, `404` |
+
+```ts
+interface SessionDto {
+  teacher: { id: string; fullName: string; email: string; role: 'head_instructor' | 'instructor' };
+  dojo: { id: string; name: string };
+}
+```
+
+Toda requisição que altera estado precisa do header `X-XSRF-TOKEN` igual ao cookie `XSRF-TOKEN`
+(o `HttpClient` do Angular faz isso sozinho). O cookie é emitido em qualquer `GET` da API.
+
 ### Tabelas de avaliação (templates)
 
 | Método | Rota | Sucesso |
@@ -91,7 +114,8 @@ interface StudentWriteDto {
 
 Cada template tem `sections[]` (ex.: *Kihon — parte 1*, *Kihon — parte 2*, *Kata*), e cada seção tem `items[]`
 (as técnicas avaliadas) e `showTotal` (se a tabela mostra a linha "Total" do bloco).
-O template inicial é a tabela **Branca a Laranja** da Hien Karate Kyokai (ver `mock-seed.ts`).
+O template inicial é a tabela **Branca a Laranja** da Hien Karate Kyokai
+(migração `backend/db/migrations/0002_default_exam_template.sql`).
 
 ### Provas
 
@@ -120,7 +144,7 @@ O PDF é gerado no navegador (jsPDF) e enviado como anexo. O servidor:
 interface EmailDeliveryDto {
   recipientEmail: string; // e-mail do cadastro do professor
   sentAt: string;         // ISO-8601 UTC (momento em que foi enfileirado)
-  simulated: boolean;     // true apenas na API simulada do front-end
+  simulated: boolean;     // true quando o servidor não tem provedor de e-mail (MAIL_TRANSPORT=file)
 }
 ```
 
@@ -128,15 +152,19 @@ Regras que o servidor **precisa** garantir (o front também valida, mas só como
 
 - `POST /exams` grava um **retrato** dos alunos (`participants`: nome e faixa no dia) e das seções do template. O histórico não pode mudar se o cadastro do aluno ou o template mudarem depois.
 - `PUT /grades` substitui a planilha inteira (idempotente — o front salva automaticamente a cada pausa na digitação). Descarta alunos/técnicas que não pertencem à prova e rejeita notas fora de **0–3** (uma casa decimal).
-- `ExamCreateDto` traz `examinerId` (professor **ativo** do dojo); o servidor grava também `examinerName` como retrato, para o histórico não mudar se o cadastro do professor mudar.
+- `ExamCreateDto` traz `examinerId` (professor **ativo** do dojo); o servidor grava também `examinerName` como retrato, para o histórico não mudar se o cadastro do professor mudar. Se o professor for excluído, `ExamDto.examinerId` passa a ser `null`.
 - `complete` só é aceito com **todas** as notas lançadas. Depois disso a prova é **imutável**.
-- `ExamSummaryDto.approvedCount` é calculado no servidor com a mesma regra do front: média de todas as notas, arredondada para uma casa decimal, ≥ `passingGrade` (ver `exam-scoring.ts`).
+- `ExamSummaryDto.approvedCount` é calculado no servidor com a mesma regra do front: média de todas as notas, arredondada para uma casa decimal, ≥ `passingGrade` (`exam-scoring.ts` no front, espelhado em `backend/src/modules/exams/domain/scoring.ts`).
 
 ---
 
 ## 3. Modelo de dados (PostgreSQL)
 
-Rascunho inicial. Toda tabela com dados de um dojo carrega `dojo_id` (isolamento entre dojos/academias).
+Rascunho que deu origem às migrações de [`backend/db/migrations/`](../backend/db/migrations/) — a fonte da
+verdade é o SQL de lá. Toda tabela com dados de um dojo carrega `dojo_id` (isolamento entre dojos).
+Diferenças implementadas: `exam_participants.student_id` não tem FK (o histórico e a planilha de notas
+sobrevivem à exclusão do aluno), `exams.examiner_id` é `ON DELETE SET NULL`, a senha e o bloqueio de
+login ficam em colunas próprias, e há as tabelas `sessions`, `teacher_invitations` e `email_outbox`.
 
 ```sql
 CREATE TABLE dojos (
@@ -254,9 +282,7 @@ Pontos de atenção:
 
 ## 4. Professores: autenticação e autorização
 
-O front-end ainda não tem login. Quando o back-end existir:
-
-**Back-end**
+**Back-end** (implementado, exceto MFA)
 - Login de professores com sessão em cookie `HttpOnly; Secure; SameSite=Lax` (`__Host-` prefix) — ou um provedor OIDC (Authorization Code + PKCE). **Nada de token em `localStorage`.**
 - Proteção CSRF com o padrão *double submit*: cookie `XSRF-TOKEN` → header `X-XSRF-TOKEN` (o front já está configurado com `withXsrfConfiguration`).
 - MFA obrigatório para o papel `head_instructor`; rate limit e bloqueio progressivo no login.
@@ -266,11 +292,11 @@ O front-end ainda não tem login. Quando o back-end existir:
   - recurso de outro dojo responde `404` (não confirma que existe).
 - O examinador já é escolhido entre os professores cadastrados (`examiner_id`). Com login, pode vir pré-selecionado como o professor logado.
 
-**Front-end (a fazer)**
-- Página de login e `authGuard` funcional nas rotas.
-- `errorInterceptor`: em `401`, limpar o estado e redirecionar para o login preservando a rota (`returnUrl` apenas interno).
-- `withCredentials` se a API ficar em outra origem.
-- Exibir o professor logado no cabeçalho, com "Sair" e "Sessões ativas".
+**Front-end** (implementado)
+- Página de login e `authGuard`; `guestGuard` no login e `headInstructorGuard` nas telas de gestão de professores.
+- `authInterceptor`: em `401`, limpa o estado e leva ao login preservando a rota (`returnUrl` apenas interno).
+- Professor logado no cabeçalho, com "Sessões ativas" e "Sair" (o logout recarrega a página para não sobrar dados em memória).
+- `withCredentials` só será necessário se a API passar a ficar em outra origem.
 
 ---
 
@@ -287,13 +313,24 @@ O front-end ainda não tem login. Quando o back-end existir:
 
 ## 6. Checklist para a primeira versão do back-end
 
-- [ ] Endpoints da seção 2 com validação por schema e Problem Details
-- [ ] Contrato em OpenAPI 3.1, validado no CI contra os tipos do front-end
-- [ ] Migrações do esquema da seção 3 (versionadas) + seed do template Branca a Laranja
-- [ ] Login de professores, sessão em cookie HttpOnly, CSRF, rate limit
-- [ ] Autorização por dojo em todas as consultas + testes de "outro dojo → 404"
-- [ ] Trigger de imutabilidade de provas concluídas
-- [ ] Auditoria das ações sensíveis
-- [ ] Envio do PDF por e-mail (fila + provedor transacional, rate limit, validação do anexo)
-- [ ] Fluxos LGPD: consentimento do responsável, exportação, anonimização
-- [ ] Front: `useMockApi: false`, proxy de desenvolvimento, login, remoção do `mock-api/`
+- [x] Endpoints da seção 2 com validação por schema e Problem Details
+- [x] Contrato em OpenAPI 3.1 (`/api/v1/openapi.json`, gerado dos schemas Zod)
+- [ ] Validar o contrato no CI contra os tipos do front-end (gerar os DTOs do Angular a partir do OpenAPI)
+- [x] Migrações do esquema da seção 3 (versionadas) + seed do template Branca a Laranja
+- [x] Login de professores, sessão em cookie HttpOnly, CSRF, rate limit e bloqueio progressivo
+- [x] Autorização por dojo em todas as consultas + testes de "outro dojo → 404"
+- [x] Trigger de imutabilidade de provas concluídas
+- [x] Auditoria das ações sensíveis
+- [x] Envio do PDF por e-mail (outbox + worker, rate limit, validação do anexo)
+- [x] Fluxos LGPD: exportação e exclusão com anonimização
+- [ ] LGPD: responsável legal e registro do consentimento para alunos menores (exige campos novos no cadastro)
+- [x] Front: proxy de desenvolvimento, login, convite, sessões ativas, remoção do `mock-api/`
+
+### Próximos passos
+
+- **MFA** (TOTP ou passkeys) obrigatório para `head_instructor` — o fluxo ainda não existe.
+- **Troca de senha** pelo próprio professor (com reautenticação e aviso por e-mail); hoje a redefinição é por novo convite.
+- **Row-Level Security** com `dojo_id` como segunda camada de isolamento.
+- **Rate limit compartilhado** (Redis) quando houver mais de uma instância da API.
+- **Pipeline de CI** (lint, testes com PostgreSQL, build, varredura de segredos e dependências) e deploy.
+- **OIDC** como alternativa ao login próprio, se a associação adotar um provedor de identidade.

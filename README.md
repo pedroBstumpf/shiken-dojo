@@ -4,8 +4,18 @@ Sistema para professores de karatê cadastrarem alunos, aplicarem provas de faix
 
 | Pasta | Conteúdo |
 |---|---|
+| [backend/](backend/) | API Node.js + PostgreSQL ([como rodar](backend/README.md)) |
 | [frontend/](frontend/) | Aplicação Angular ([como rodar](frontend/README.md)) |
 | [docs/](docs/) | Guias do projeto |
+
+## Rodando localmente
+
+```bash
+cd backend && npm install && npm run db:setup && npm run db:migrate && npm run db:seed && npm run dev
+cd frontend && npm install && npm start   # em outro terminal: http://localhost:4200
+```
+
+Login de demonstração: `okada@dojo.exemplo`, senha em `SEED_PASSWORD` no `backend/.env`.
 
 ## Guias
 
@@ -13,6 +23,7 @@ Sistema para professores de karatê cadastrarem alunos, aplicarem provas de faix
 - [DESIGN.md](docs/DESIGN.md) — boas práticas de interface e experiência do usuário
 - [BACKEND.md](docs/BACKEND.md) — boas práticas de back-end, banco de dados e segurança
 - [INTEGRACAO-BACKEND.md](docs/INTEGRACAO-BACKEND.md) — contrato da API, esquema PostgreSQL e próximos passos
+- [docs/adr/](docs/adr/) — decisões de arquitetura
 
 ## Branches
 
