@@ -1,5 +1,6 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
+import pg from 'pg';
 import { AppError, VALIDATION_MESSAGE } from './app-error.js';
 
 const PROBLEM_CONTENT_TYPE = 'application/problem+json; charset=utf-8';
@@ -53,8 +54,37 @@ function fieldKey(instancePath: string): string {
   return instancePath.replace(/^\//, '').replaceAll('/', '.') || '_';
 }
 
+/**
+ * Restrições do banco são a última linha de defesa: se uma regra escapou da validação da
+ * aplicação, a resposta continua sendo um 4xx coerente, sem expor nomes de tabelas ou SQL.
+ */
+function fromDatabaseError(error: pg.DatabaseError): AppError | null {
+  if (error.code === 'P0001' && error.message === 'EXAM_LOCKED') {
+    return new AppError(
+      409,
+      'EXAM_LOCKED',
+      'Esta prova já foi finalizada e não pode ser alterada.',
+    );
+  }
+  switch (error.code) {
+    case '23505': // unique_violation
+      return new AppError(409, 'CONFLICT', 'Este registro já existe.');
+    case '23503': // foreign_key_violation
+      return new AppError(409, 'CONFLICT', 'Este registro está em uso e não pode ser alterado.');
+    case '23502': // not_null_violation
+    case '23514': // check_violation
+    case '22P02': // invalid_text_representation
+    case '22007': // invalid_datetime_format
+    case '22008': // datetime_field_overflow
+      return new AppError(422, 'VALIDATION_FAILED', VALIDATION_MESSAGE);
+    default:
+      return null;
+  }
+}
+
 function toAppError(error: unknown): AppError | null {
   if (error instanceof AppError) return error;
+  if (error instanceof pg.DatabaseError) return fromDatabaseError(error);
 
   if (hasZodFastifySchemaValidationErrors(error)) {
     const context = (error as FastifyError).validationContext;

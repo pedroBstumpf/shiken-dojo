@@ -26,6 +26,8 @@ export function createPool(options: PoolOptions): pg.Pool {
     // Nenhuma consulta eterna nem transação esquecida aberta (BACKEND.md §9).
     statement_timeout: 5_000,
     idle_in_transaction_session_timeout: 10_000,
+    // Sessões em UTC: "hoje" no banco é o mesmo "hoje" da aplicação (BACKEND.md §9).
+    options: '-c TimeZone=UTC',
   });
 }
 
