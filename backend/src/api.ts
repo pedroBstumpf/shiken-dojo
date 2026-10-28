@@ -2,6 +2,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { requireAuth } from './modules/auth/auth.guard.js';
 import type { AuthService } from './modules/auth/auth.service.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
+import { examTemplateRoutes, type ExamTemplatesService } from './modules/exams/exam-templates.js';
 import { studentRoutes } from './modules/students/students.routes.js';
 import type { StudentsService } from './modules/students/students.service.js';
 import { teacherRoutes } from './modules/teachers/teachers.routes.js';
@@ -13,6 +14,7 @@ export interface ApiServices {
   readonly auth: AuthService;
   readonly students: StudentsService;
   readonly teachers: TeachersService;
+  readonly examTemplates: ExamTemplatesService;
 }
 
 export interface ApiOptions {
@@ -40,6 +42,7 @@ export const api: FastifyPluginAsyncZod<ApiOptions> = async (app, options) => {
     scope.addHook('onRequest', requireAuth(services.auth, cookies));
     await scope.register(teacherRoutes, { service: services.teachers });
     await scope.register(studentRoutes, { service: services.students });
+    await scope.register(examTemplateRoutes, { service: services.examTemplates });
   };
   await app.register(protectedApi);
 };
