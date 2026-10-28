@@ -14,10 +14,7 @@
         Continuar avaliação
       </a>
     }
-    <button actions matButton="outlined" type="button" class="sd-no-print" (click)="onPrint()">
-      <mat-icon aria-hidden="true">print</mat-icon>
-      Imprimir
-    </button>
+    <sd-exam-share-actions actions [exam]="data" />
     <a actions matButton routerLink="/history" class="sd-no-print">
       <mat-icon aria-hidden="true">arrow_back</mat-icon>
       Histórico

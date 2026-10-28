@@ -1,6 +1,10 @@
 import { fromIsoDate, toIsoDate } from '@shared/utils/date.utils';
-import { ExamCreateDto, ExamDto, ExamSummaryDto } from './exam.dto';
-import { Exam, ExamSetup, ExamSummary } from './exam.model';
+import { EmailDeliveryDto, ExamCreateDto, ExamDto, ExamSummaryDto } from './exam.dto';
+import { EmailDelivery, Exam, ExamSetup, ExamSummary } from './exam.model';
+
+export function toEmailDelivery(dto: EmailDeliveryDto): EmailDelivery {
+  return { ...dto, sentAt: new Date(dto.sentAt) };
+}
 
 export function toExam(dto: ExamDto): Exam {
   return {

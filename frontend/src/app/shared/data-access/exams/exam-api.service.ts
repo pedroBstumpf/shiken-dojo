@@ -3,9 +3,23 @@ import { inject, Injectable } from '@angular/core';
 import { Paginated } from '@shared/models/paginated.model';
 import { map, Observable } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url.token';
-import { ExamDto, ExamGradesDto, ExamSummaryDto, ExamTemplateDto } from './exam.dto';
-import { toExam, toExamCreateDto, toExamSummary } from './exam.mapper';
-import { Exam, ExamSetup, ExamSummary, ExamTemplate, GradeSheet } from './exam.model';
+import {
+  EmailDeliveryDto,
+  ExamDto,
+  ExamGradesDto,
+  ExamSummaryDto,
+  ExamTemplateDto,
+} from './exam.dto';
+import { toEmailDelivery, toExam, toExamCreateDto, toExamSummary } from './exam.mapper';
+import {
+  EmailDelivery,
+  Exam,
+  ExamEmailRequest,
+  ExamSetup,
+  ExamSummary,
+  ExamTemplate,
+  GradeSheet,
+} from './exam.model';
 
 const PAGE_LIMIT = 100;
 
@@ -43,6 +57,17 @@ export class ExamApiService {
 
   complete(id: string): Observable<Exam> {
     return this.http.post<ExamDto>(`${this.examUrl(id)}/complete`, {}).pipe(map(toExam));
+  }
+
+  /** Envia o PDF da prova (multipart) para o e-mail cadastrado do professor escolhido. */
+  sendPdfByEmail(id: string, request: ExamEmailRequest): Observable<EmailDelivery> {
+    const body = new FormData();
+    body.append('teacherId', request.teacherId);
+    body.append('variant', request.variant);
+    body.append('file', request.file, request.fileName);
+    return this.http
+      .post<EmailDeliveryDto>(`${this.examUrl(id)}/email`, body)
+      .pipe(map(toEmailDelivery));
   }
 
   remove(id: string): Observable<void> {

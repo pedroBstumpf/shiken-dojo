@@ -55,6 +55,13 @@ export interface ExamCreateDto {
   readonly studentIds: readonly string[];
 }
 
+export interface EmailDeliveryDto {
+  readonly recipientEmail: string;
+  /** ISO-8601 em UTC */
+  readonly sentAt: string;
+  readonly simulated: boolean;
+}
+
 export interface ExamGradesDto {
   readonly grades: GradeSheet;
 }

@@ -7,7 +7,11 @@
     kanji="審査"
     kanjiReading="shinsa"
     [description]="data.templateName"
-  />
+  >
+    @if (examOnScreen(); as current) {
+      <sd-exam-share-actions actions [exam]="current" />
+    }
+  </sd-page-header>
 
   <!-- Dados do exame -->
   <dl class="mb-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-on-surface-variant">

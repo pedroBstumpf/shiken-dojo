@@ -58,6 +58,13 @@
               "src/styles/tailwind.css",
               "src/styles/material-theme.scss",
               "src/styles/global.css"
+            ],
+            "allowedCommonJsDependencies": [
+              "canvg",
+              "core-js",
+              "raf",
+              "rgbcolor",
+              "html2canvas"
             ]
           },
           "configurations": {

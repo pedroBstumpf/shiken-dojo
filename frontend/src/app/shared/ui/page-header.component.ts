@@ -9,7 +9,8 @@ import { BrushStrokeComponent } from './brush-stroke.component';
   selector: 'sd-page-header',
   imports: [BrushStrokeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'relative mb-6 block overflow-hidden' },
+  // overflow-clip (e não hidden): hidden permite rolagem programática, e o foco nos botões deslocava o título.
+  host: { class: 'relative mb-6 block overflow-clip' },
   template: `
     <span
       class="pointer-events-none absolute -top-4 right-0 font-display text-8xl leading-none text-on-surface/5 select-none writing-vertical sm:text-9xl"

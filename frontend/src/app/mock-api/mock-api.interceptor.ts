@@ -7,6 +7,7 @@ import {
 import { inject } from '@angular/core';
 import { API_BASE_URL } from '@shared/data-access/api-base-url.token';
 import {
+  EmailDeliveryDto,
   ExamCreateDto,
   ExamDto,
   ExamGradesDto,
@@ -92,6 +93,7 @@ function route(db: MockDbService, req: HttpRequest<unknown>, path: string): Mock
     if (id && !action && method === 'DELETE') return deleteExam(db, id);
     if (id && action === 'grades' && method === 'PUT') return saveGrades(db, id, req.body);
     if (id && action === 'complete' && method === 'POST') return completeExam(db, id);
+    if (id && action === 'email' && method === 'POST') return emailExam(db, id, req.body);
   }
 
   return problem(404, 'NOT_FOUND', 'Recurso não encontrado.');
@@ -381,6 +383,47 @@ function completeExam(db: MockDbService, id: string): MockResult {
   const updated: ExamDto = { ...exam, status: 'completed', completedAt: now, updatedAt: now };
   db.write((state) => (state.exams[index] = updated));
   return ok(updated);
+}
+
+const MAX_PDF_BYTES = 5 * 1024 * 1024;
+
+/**
+ * Simula o envio do PDF por e-mail. Regras que o servidor real também deve aplicar:
+ * destinatário só pode ser professor ativo cadastrado (o e-mail vem do cadastro, nunca do cliente),
+ * anexo precisa ser PDF de até 5 MB. Nada é enviado de fato: a resposta traz simulated: true.
+ */
+function emailExam(db: MockDbService, id: string, body: unknown): MockResult {
+  if (!db.read().exams.some((e) => e.id === id)) {
+    return problem(404, 'EXAM_NOT_FOUND', 'Prova não encontrada.');
+  }
+  if (!(body instanceof FormData)) {
+    return problem(400, 'BAD_REQUEST', 'Envie os dados como multipart/form-data.');
+  }
+  const errors: Record<string, string> = {};
+  const teacher = db.read().teachers.find((t) => t.id === body.get('teacherId') && t.active);
+  const file = body.get('file');
+  if (!teacher) errors['teacherId'] = 'Escolha um professor ativo.';
+  if (body.get('variant') !== 'filled' && body.get('variant') !== 'blank')
+    errors['variant'] = 'Versão inválida.';
+  if (!(file instanceof Blob) || file.type !== 'application/pdf' || file.size === 0) {
+    errors['file'] = 'O anexo precisa ser um PDF.';
+  } else if (file.size > MAX_PDF_BYTES) {
+    errors['file'] = 'O PDF passa do limite de 5 MB.';
+  }
+  if (!teacher || Object.keys(errors).length > 0) {
+    return problem(
+      422,
+      'VALIDATION_FAILED',
+      Object.values(errors)[0] ?? 'Dados inválidos.',
+      errors,
+    );
+  }
+  const delivery: EmailDeliveryDto = {
+    recipientEmail: teacher.email,
+    sentAt: new Date().toISOString(),
+    simulated: true,
+  };
+  return { status: 202, body: delivery };
 }
 
 function deleteExam(db: MockDbService, id: string): MockResult {

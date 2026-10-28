@@ -92,6 +92,44 @@ describe('mockApiInterceptor', () => {
     expect(brown.dan).toBeNull();
   });
 
+  it('envia o PDF só para o e-mail cadastrado de um professor ativo', async () => {
+    const api = TestBed.inject(ExamApiService);
+    const [summary] = await firstValueFrom(api.list());
+    const [teacher] = await firstValueFrom(TestBed.inject(TeacherApiService).list());
+    const pdf = new Blob(['%PDF-1.3'], { type: 'application/pdf' });
+
+    const delivery = await firstValueFrom(
+      api.sendPdfByEmail(summary!.id, {
+        teacherId: teacher!.id,
+        variant: 'blank',
+        file: pdf,
+        fileName: 'prova.pdf',
+      }),
+    );
+    expect(delivery.recipientEmail).toBe(teacher!.email);
+    expect(delivery.simulated).toBe(true);
+
+    const notPdf = await firstValueFrom(
+      api.sendPdfByEmail(summary!.id, {
+        teacherId: teacher!.id,
+        variant: 'filled',
+        file: new Blob(['oi'], { type: 'text/plain' }),
+        fileName: 'prova.txt',
+      }),
+    ).catch((e: unknown) => e as ApiError);
+    expect((notPdf as ApiError).fieldErrors['file']).toBeTruthy();
+
+    const unknownTeacher = await firstValueFrom(
+      api.sendPdfByEmail(summary!.id, {
+        teacherId: 'nao-existe',
+        variant: 'filled',
+        file: pdf,
+        fileName: 'prova.pdf',
+      }),
+    ).catch((e: unknown) => e as ApiError);
+    expect((unknownTeacher as ApiError).status).toBe(422);
+  });
+
   it('só aceita professor ativo como examinador', async () => {
     const teachers = TestBed.inject(TeacherApiService);
     const [examiner] = await firstValueFrom(teachers.list());

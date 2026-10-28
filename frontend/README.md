@@ -30,7 +30,8 @@ no DevTools → Application → Local Storage.
 - **Professores** — cadastro com contato, faixa e grau (dan), registro na federação, função no dojo e situação (ativo/inativo). Professores ativos são os examinadores das provas.
 - **Notas** — escala de 0 a 3 (aceita meio ponto, ex.: 2,5); valores acima de 3 não podem ser digitados.
 - **Aplicar prova** — escolha da tabela de avaliação, dados do exame e alunos. A tabela de notas segue o formulário em papel (técnicas nas linhas, alunos nas colunas), destaca em cruz a linha e a coluna da célula ativa, navega pelo teclado (setas, Enter configurável, Esc desfaz) e salva automaticamente.
-- **Histórico** — provas concluídas e em andamento, com resultado por aluno (carimbo 合格), tabela completa e impressão.
+- **Histórico** — provas concluídas e em andamento, com resultado por aluno (carimbo 合格) e tabela completa.
+- **PDF e e-mail** — na avaliação e no resultado: exportar a prova em PDF (com as notas lançadas — o que falta sai como quadrado em branco — ou totalmente em branco para preencher à mão) e enviar o PDF ao e-mail cadastrado de um professor. Na API simulada o envio é só simulado.
 - Modo claro/escuro (segue o sistema; o botão no topo alterna).
 
 ## Estrutura

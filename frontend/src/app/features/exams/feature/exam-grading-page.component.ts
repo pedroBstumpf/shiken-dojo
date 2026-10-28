@@ -39,6 +39,7 @@ import {
   switchMap,
   tap,
 } from 'rxjs';
+import { ExamShareActionsComponent } from '../ui/exam-share-actions.component';
 import { EnterDirection, GradeChange, GradingGridComponent } from '../ui/grading-grid.component';
 
 type SaveState = 'saved' | 'pending' | 'saving' | 'error';
@@ -58,6 +59,7 @@ const AUTOSAVE_DELAY_MS = 800;
     BeltTransitionComponent,
     GradingGridComponent,
     GradePipe,
+    ExamShareActionsComponent,
   ],
   templateUrl: './exam-grading-page.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -84,6 +86,12 @@ export class ExamGradingPageComponent implements CanLeave {
   protected readonly saveState = signal<SaveState>('saved');
   protected readonly enterDirection = signal<EnterDirection>('student');
   protected readonly isCompleting = signal(false);
+
+  /** A prova com as notas que estão na tela (o PDF reflete o que o professor vê, mesmo antes de salvar). */
+  protected readonly examOnScreen = computed(() => {
+    const exam = this.exam.value();
+    return exam ? { ...exam, grades: this.grades() } : null;
+  });
 
   protected readonly progress = computed(() => {
     const exam = this.exam.value();

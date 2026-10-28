@@ -1,4 +1,4 @@
-import { DatePipe, DOCUMENT } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,6 +15,7 @@ import { HankoStampComponent } from '@shared/ui/hanko-stamp.component';
 import { InitialsAvatarComponent } from '@shared/ui/initials-avatar.component';
 import { PageHeaderComponent } from '@shared/ui/page-header.component';
 import { formatScore } from '@shared/utils/grade.utils';
+import { ExamShareActionsComponent } from '../ui/exam-share-actions.component';
 import { GradingGridComponent } from '../ui/grading-grid.component';
 
 @Component({
@@ -32,13 +33,13 @@ import { GradingGridComponent } from '../ui/grading-grid.component';
     InitialsAvatarComponent,
     GradingGridComponent,
     GradePipe,
+    ExamShareActionsComponent,
   ],
   templateUrl: './exam-detail-page.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExamDetailPageComponent {
   private readonly api = inject(ExamApiService);
-  private readonly document = inject(DOCUMENT);
 
   readonly id = input.required<string>();
 
@@ -79,8 +80,4 @@ export class ExamDetailPageComponent {
     const exam = this.exam.value();
     return exam ? BELT_INFO[exam.toBelt].label : '';
   });
-
-  protected onPrint(): void {
-    this.document.defaultView?.print();
-  }
 }
