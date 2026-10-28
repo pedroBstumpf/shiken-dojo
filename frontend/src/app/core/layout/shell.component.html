@@ -73,6 +73,10 @@
               {{ roleInfo[session.teacher.role].label }} · {{ session.dojo.name }}
             </p>
           </div>
+          <a mat-menu-item routerLink="/account/sessions">
+            <mat-icon aria-hidden="true">devices</mat-icon>
+            Sessões ativas
+          </a>
           <button mat-menu-item type="button" (click)="logout()">
             <mat-icon aria-hidden="true">logout</mat-icon>
             Sair

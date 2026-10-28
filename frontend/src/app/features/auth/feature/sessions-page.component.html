@@ -1,0 +1,54 @@
+<sd-page-header
+  title="Sessões ativas"
+  kanji="残心"
+  kanjiReading="zanshin · atenção constante"
+  description="Aparelhos em que você está conectado. Se não reconhecer algum, encerre a sessão."
+/>
+
+@if (sessions.error(); as error) {
+  <sd-error-state [message]="error.message" (retry)="sessions.reload()" />
+} @else if (sessions.isLoading() && !sessions.hasValue()) {
+  <div class="max-w-2xl space-y-3" aria-busy="true" aria-label="Carregando sessões">
+    @for (row of [1, 2]; track row) {
+      <div class="h-20 animate-pulse rounded-xl bg-surface-container"></div>
+    }
+  </div>
+} @else {
+  <ul class="max-w-2xl space-y-3">
+    @for (session of sessions.value(); track session.id) {
+      <li
+        class="flex flex-wrap items-center gap-3 rounded-2xl border border-outline-variant bg-surface-lowest p-4"
+      >
+        <mat-icon class="text-on-surface-variant" aria-hidden="true">{{
+          describe(session.userAgent).icon
+        }}</mat-icon>
+        <div class="min-w-0 flex-1">
+          <p class="font-semibold text-on-surface">
+            {{ describe(session.userAgent).label }}
+            @if (session.current) {
+              <span
+                class="ml-2 rounded-full bg-success-container px-2 py-0.5 text-xs font-medium text-on-success-container"
+                >Este aparelho</span
+              >
+            }
+          </p>
+          <p class="text-sm text-on-surface-variant">
+            Último acesso {{ session.lastSeenAt | date: 'short' }} · entrou em
+            {{ session.createdAt | date: 'shortDate' }}
+          </p>
+        </div>
+        @if (!session.current) {
+          <button
+            matButton="outlined"
+            type="button"
+            (click)="revoke(session)"
+            [disabled]="revoking() === session.id"
+          >
+            <mat-icon aria-hidden="true">logout</mat-icon>
+            Encerrar
+          </button>
+        }
+      </li>
+    }
+  </ul>
+}

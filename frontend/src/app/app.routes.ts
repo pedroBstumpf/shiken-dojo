@@ -50,6 +50,14 @@ export const routes: Routes = [
         path: 'history',
         loadChildren: () => import('@features/exams/exams.routes').then((m) => m.HISTORY_ROUTES),
       },
+      {
+        path: 'account/sessions',
+        title: 'Sessões ativas',
+        loadComponent: () =>
+          import('@features/auth/feature/sessions-page.component').then(
+            (m) => m.SessionsPageComponent,
+          ),
+      },
     ],
   },
   {
