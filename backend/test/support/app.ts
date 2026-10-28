@@ -16,6 +16,8 @@ export async function createTestApp(env: NodeJS.ProcessEnv = {}): Promise<TestCo
     NODE_ENV: 'test',
     LOG_LEVEL: 'silent',
     DATABASE_URL: requireEnv('TEST_DATABASE_URL'),
+    CSRF_SECRET: 'test-csrf-secret-with-at-least-32-chars',
+    BREACHED_PASSWORD_CHECK: 'false',
     ...env,
   });
   const pool = createPool({ connectionString: config.databaseUrl, applicationName: 'tests' });

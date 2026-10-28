@@ -201,13 +201,17 @@ function url(user: string, secret: string, database: string): string {
   return `postgres://${user}:${encodeURIComponent(secret)}@localhost:${PORT}/${database}`;
 }
 
-/** Acrescenta ao .env as variáveis que faltam, sem sobrescrever o que já foi ajustado à mão. */
+/**
+ * Acrescenta ao .env as variáveis que faltam (conexões do banco local e segredos de dev),
+ * sem sobrescrever o que já foi ajustado à mão.
+ */
 function writeEnv(credentials: Credentials): void {
   const values: Record<string, string> = {
     DATABASE_URL: url('app_runtime', credentials.runtime, 'shiken_dojo'),
     MIGRATION_DATABASE_URL: url('app_migrator', credentials.migrator, 'shiken_dojo'),
     TEST_DATABASE_URL: url('app_runtime', credentials.runtime, 'shiken_dojo_test'),
     TEST_MIGRATION_DATABASE_URL: url('app_migrator', credentials.migrator, 'shiken_dojo_test'),
+    CSRF_SECRET: randomBytes(48).toString('base64url'),
   };
   if (!existsSync(ENV_FILE)) {
     writeFileSync(ENV_FILE, readFileSync(ENV_EXAMPLE_FILE, 'utf8'), { mode: 0o600 });
@@ -223,7 +227,7 @@ function writeEnv(credentials: Credentials): void {
       : `${content.trimEnd()}\n${line}\n`;
   }
   writeFileSync(ENV_FILE, content);
-  console.log('.env atualizado com as conexões do banco local.');
+  console.log('.env atualizado com as conexões do banco local e os segredos de desenvolvimento.');
 }
 
 async function setup(): Promise<void> {

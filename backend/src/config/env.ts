@@ -24,6 +24,14 @@ const envSchema = z.object({
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(10).default(300),
   /** Conexão da API: papel com apenas SELECT/INSERT/UPDATE/DELETE. */
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/, error: 'Informe uma URL postgres://' }),
+  /** Cookies só por HTTPS. Padrão: ligado em produção (onde é obrigatório). */
+  COOKIE_SECURE: z.stringbool().optional(),
+  /** Chave para assinar o token anti-CSRF. Gere com: openssl rand -base64 48 */
+  CSRF_SECRET: z.string().min(32, 'Use pelo menos 32 caracteres aleatórios.'),
+  SESSION_IDLE_MINUTES: z.coerce.number().int().min(5).max(1440).default(720),
+  SESSION_ABSOLUTE_HOURS: z.coerce.number().int().min(1).max(720).default(168),
+  /** Recusa senhas que aparecem em vazamentos (Have I Been Pwned, por k-anonymity). */
+  BREACHED_PASSWORD_CHECK: z.stringbool().default(true),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -39,6 +47,10 @@ export interface AppConfig {
   readonly corsOrigins: readonly string[];
   readonly globalRateLimitPerMinute: number;
   readonly databaseUrl: string;
+  readonly cookieSecure: boolean;
+  readonly csrfSecret: string;
+  readonly session: { readonly idleMinutes: number; readonly absoluteHours: number };
+  readonly breachedPasswordCheck: boolean;
 }
 
 export class ConfigError extends Error {
@@ -57,9 +69,13 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     );
   }
   const env = result.data;
+  const isProduction = env.NODE_ENV === 'production';
+  if (isProduction && env.COOKIE_SECURE === false) {
+    throw new ConfigError(['COOKIE_SECURE: cookies sem HTTPS não são permitidos em produção']);
+  }
   return {
     env: env.NODE_ENV,
-    isProduction: env.NODE_ENV === 'production',
+    isProduction,
     host: env.HOST,
     port: env.PORT,
     logLevel: env.LOG_LEVEL,
@@ -67,5 +83,9 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     corsOrigins: env.CORS_ORIGINS,
     globalRateLimitPerMinute: env.RATE_LIMIT_PER_MINUTE,
     databaseUrl: env.DATABASE_URL,
+    cookieSecure: env.COOKIE_SECURE ?? isProduction,
+    csrfSecret: env.CSRF_SECRET,
+    session: { idleMinutes: env.SESSION_IDLE_MINUTES, absoluteHours: env.SESSION_ABSOLUTE_HOURS },
+    breachedPasswordCheck: env.BREACHED_PASSWORD_CHECK,
   };
 }
