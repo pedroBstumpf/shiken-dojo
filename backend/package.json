@@ -21,7 +21,8 @@
     "db:status": "tsx scripts/dev-db.ts status",
     "db:migrate": "tsx --env-file-if-exists=.env src/cli/migrate.ts",
     "db:seed": "tsx --env-file-if-exists=.env src/cli/seed.ts",
-    "bootstrap": "tsx --env-file-if-exists=.env src/cli/bootstrap.ts"
+    "bootstrap": "tsx --env-file-if-exists=.env src/cli/bootstrap.ts",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.5",
