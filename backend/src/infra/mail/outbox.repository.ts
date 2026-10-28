@@ -37,22 +37,28 @@ export async function enqueueEmail(
   return rows[0]!;
 }
 
-/** Quantos e-mails do tipo foram enfileirados na última hora, por quem pediu e para quem. */
+/**
+ * Quantos e-mails do tipo foram enfileirados na última hora (por quem pediu ou para quem) e
+ * em quantos segundos o mais antigo deles sai da janela. Contado no banco, o limite vale
+ * mesmo com várias instâncias da API.
+ */
 export async function countRecentEmails(
   db: Queryable,
   kind: string,
   filter: { readonly requestedBy: string } | { readonly recipientTeacherId: string },
-): Promise<number> {
+): Promise<{ count: number; windowResetsInSeconds: number }> {
   const [column, value] =
     'requestedBy' in filter
       ? ['requested_by', filter.requestedBy]
       : ['recipient_teacher_id', filter.recipientTeacherId];
-  const { rows } = await db.query<{ count: number }>(
-    `SELECT count(*) AS count FROM email_outbox
+  const { rows } = await db.query<{ count: number; resetsIn: number | null }>(
+    `SELECT count(*) AS count,
+            ceil(extract(epoch FROM min(created_at) + interval '1 hour' - now()))::int AS "resetsIn"
+       FROM email_outbox
       WHERE kind = $1 AND ${column} = $2 AND created_at > now() - interval '1 hour'`,
     [kind, value],
   );
-  return rows[0]!.count;
+  return { count: rows[0]!.count, windowResetsInSeconds: rows[0]!.resetsIn ?? 0 };
 }
 
 export interface ClaimedEmail {

@@ -23,6 +23,7 @@ import {
   createHibpChecker,
   noopBreachedPasswordChecker,
 } from './modules/auth/breached-passwords.js';
+import { ExamEmailService } from './modules/exams/exam-email.js';
 import { ExamTemplatesService } from './modules/exams/exam-templates.js';
 import { ExamsService } from './modules/exams/exams.service.js';
 import { healthRoutes } from './modules/health/health.routes.js';
@@ -87,6 +88,7 @@ export async function buildApp(deps: AppDependencies): Promise<App> {
     teachers: new TeachersService(deps.pool, config.appBaseUrl),
     examTemplates: new ExamTemplatesService(deps.pool),
     exams: new ExamsService(deps.pool),
+    examEmail: new ExamEmailService(deps.pool, deps.mailer.simulated),
   };
 
   await app.register(healthRoutes, { isReady: () => isDatabaseReady(deps.pool) });

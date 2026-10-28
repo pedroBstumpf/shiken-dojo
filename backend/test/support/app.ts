@@ -65,7 +65,8 @@ export const silentLogger = {
   error: noop,
 } as unknown as FastifyBaseLogger;
 
-/** Roda o worker da outbox uma vez: os e-mails pendentes vão para o FakeMailer. */
+/** Roda o worker da outbox até esvaziar a fila: os e-mails vão para o FakeMailer. */
 export async function deliverEmails(ctx: TestContext): Promise<void> {
-  await new OutboxWorker(ctx.pool, ctx.mailer, silentLogger).runOnce();
+  const worker = new OutboxWorker(ctx.pool, ctx.mailer, silentLogger);
+  while ((await worker.runOnce()) > 0);
 }
