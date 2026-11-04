@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Session } from '@core/auth/auth.model';
 import { AuthService } from '@core/auth/auth.service';
+import { BackupService } from '@core/backup/backup.service';
 import { AppComponent } from './app.component';
 
 const SESSION: Session = {
@@ -20,9 +21,14 @@ async function render(session: Session | null): Promise<HTMLElement> {
     imports: [AppComponent],
     providers: [
       provideRouter([]),
+      { provide: BackupService, useValue: {} },
       {
         provide: AuthService,
-        useValue: { session: state, isAuthenticated: () => state() !== null },
+        useValue: {
+          session: state,
+          isAuthenticated: () => state() !== null,
+          isHeadInstructor: () => state()?.teacher.role === 'head_instructor',
+        },
       },
     ],
   }).compileComponents();
@@ -34,7 +40,7 @@ async function render(session: Session | null): Promise<HTMLElement> {
 describe('AppComponent', () => {
   it('mostra a marca e a navegação principal para o professor logado', async () => {
     const element = await render(SESSION);
-    expect(element.textContent).toContain('Shiken Dojo');
+    expect(element.textContent).toContain('Ryu-kan');
     expect(element.querySelectorAll('nav[aria-label="Navegação principal"]').length).toBe(2);
     expect(element.textContent).toContain('Histórico');
     expect(element.querySelector('[aria-label="Conta de Hiroshi Okada"]')).not.toBeNull();
@@ -42,7 +48,7 @@ describe('AppComponent', () => {
 
   it('esconde a navegação antes do login', async () => {
     const element = await render(null);
-    expect(element.textContent).toContain('Shiken Dojo');
+    expect(element.textContent).toContain('Ryu-kan');
     expect(element.querySelectorAll('nav[aria-label="Navegação principal"]').length).toBe(0);
   });
 });

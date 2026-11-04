@@ -1,6 +1,7 @@
-# Firebase: como o Shiken Dojo funciona e como publicar
+# Firebase: como o Ryu-kan funciona e como publicar
 
-O app não tem servidor próprio. O front-end Angular fala direto com o Firebase, no plano gratuito
+O nome do repositório e do projeto Firebase continuam `shiken-dojo`; o nome **Ryu-kan** aparece no
+site, no endereço e nos PDFs. O app não tem servidor próprio. O front-end Angular fala direto com o Firebase, no plano gratuito
 (Spark), que não pede cartão. A API em [`backend/`](../backend/) está guardada, mas **não é usada**.
 
 | Peça | Serviço | Limite gratuito relevante |
@@ -79,10 +80,13 @@ oriente a sempre usar **Sair** em aparelhos compartilhados.
 
 ```bash
 npx firebase login
+npx firebase hosting:sites:create ryu-kan   # só na primeira vez
 npm run deploy
 ```
 
-O site fica em `https://SEU-PROJETO.web.app`.
+O site fica em `https://ryu-kan.web.app`; o endereço antigo `shiken-dojo.web.app` redireciona para ele.
+
+Antes do deploy, adicione `ryu-kan.web.app` em **Authentication → Configurações → Domínios autorizados**. Sem isso, os e-mails de convite e de senha falham.
 
 **Crie o primeiro professor (só uma vez):**
 
@@ -100,10 +104,10 @@ O site fica em `https://SEU-PROJETO.web.app`.
     entre de novo. Depois, complete seu cadastro em **Professores**.
 
 **Ajuste o e-mail do convite:** em **Authentication → Modelos → Redefinição de senha**, troque o nome
-do remetente para `Shiken Dojo`, escolha o português e use um texto que sirva para os dois casos,
+do remetente para `Ryu-kan`, escolha o português e use um texto que sirva para os dois casos,
 por exemplo:
 
-> Olá! Use o link abaixo para definir sua senha de acesso ao Shiken Dojo: %LINK%
+> Olá! Use o link abaixo para definir sua senha de acesso ao Ryu-kan: %LINK%
 >
 > Se você não esperava este e-mail, pode ignorá-lo.
 
@@ -112,7 +116,7 @@ Firebase. Faça um convite real para testar. Para conferir os headers de seguran
 local não aplica:
 
 ```bash
-curl -I https://SEU-PROJETO.web.app/login
+curl -I https://ryu-kan.web.app/login
 ```
 
 A resposta precisa trazer `content-security-policy` e `strict-transport-security`.
@@ -151,8 +155,10 @@ Mudou o `firestore.rules`? Atualize também `frontend/firebase-tests/firestore.r
 
 ## Limitações conhecidas
 
-- **Backups:** o plano gratuito não tem backup automático do Firestore. Os PDFs exportados são a
-  cópia de segurança das provas.
+- **Backups:** o plano gratuito não faz backup automático do Firestore. O sensei responsável baixa
+  um arquivo com alunos e provas em **menu da conta → Baixar backup**; faça isso com regularidade e
+  guarde em local seguro, porque o arquivo tem dados de alunos. O app ainda não tem tela para
+  restaurar: a restauração é feita pelo desenvolvedor, a partir desse arquivo.
 - **Provas finalizadas:** as regras impedem alterá-las, mas não conseguem conferir nota por nota. A
   validação da escala fica no app, e só professores cadastrados chegam a gravar.
 - **Envio de PDF por e-mail:** saiu junto com o servidor, porque o Firebase gratuito só envia os
@@ -160,4 +166,5 @@ Mudou o `firestore.rules`? Atualize também `frontend/firebase-tests/firestore.r
   e-mail…), nos dispositivos que oferecem isso.
 - **Vários dojos:** o app assume um único dojo. Um segundo dojo pede outro projeto Firebase ou uma
   mudança no modelo de dados.
-- **LGPD:** ainda não tratada; ver a decisão pendente com o responsável pelo projeto.
+- **LGPD:** o app não tem termo de consentimento nem política de privacidade, por decisão do
+  responsável pelo projeto.

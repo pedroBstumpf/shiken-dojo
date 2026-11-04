@@ -7,7 +7,7 @@ import { ExamApiService } from '@shared/data-access/exams/exam-api.service';
 import { StudentApiService } from '@shared/data-access/students/student-api.service';
 import { BELT_INFO, BELTS } from '@shared/models/belt.model';
 import { BeltBadgeComponent } from '@shared/ui/belt-badge.component';
-import { EnsoLogoComponent } from '@shared/ui/enso-logo.component';
+import { LogoComponent } from '@shared/ui/logo.component';
 import { ErrorStateComponent } from '@shared/ui/error-state.component';
 import { ExamSummaryCardComponent } from '@shared/ui/exam-summary-card.component';
 
@@ -20,7 +20,7 @@ const RECENT_EXAMS_LIMIT = 4;
     MatButtonModule,
     MatIconModule,
     BeltBadgeComponent,
-    EnsoLogoComponent,
+    LogoComponent,
     ErrorStateComponent,
     ExamSummaryCardComponent,
   ],

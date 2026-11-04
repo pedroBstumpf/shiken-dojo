@@ -8,6 +8,6 @@ export class PageTitleStrategy extends TitleStrategy {
 
   override updateTitle(snapshot: RouterStateSnapshot): void {
     const pageTitle = this.buildTitle(snapshot);
-    this.title.setTitle(pageTitle ? `${pageTitle} · Shiken Dojo` : 'Shiken Dojo');
+    this.title.setTitle(pageTitle ? `${pageTitle} · Ryu-kan` : 'Ryu-kan');
   }
 }

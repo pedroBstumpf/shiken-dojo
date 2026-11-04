@@ -10,7 +10,7 @@ import { NotificationService } from '@core/notifications/notification.service';
 import { safeReturnUrl } from '@core/auth/return-url';
 import { ApiError } from '@shared/models/api-error.model';
 import { FieldErrorPipe } from '@shared/pipes/field-error.pipe';
-import { EnsoLogoComponent } from '@shared/ui/enso-logo.component';
+import { LogoComponent } from '@shared/ui/logo.component';
 
 @Component({
   selector: 'sd-login-page',
@@ -20,7 +20,7 @@ import { EnsoLogoComponent } from '@shared/ui/enso-logo.component';
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-    EnsoLogoComponent,
+    LogoComponent,
     FieldErrorPipe,
   ],
   templateUrl: './login-page.component.html',

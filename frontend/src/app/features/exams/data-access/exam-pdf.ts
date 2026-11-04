@@ -23,9 +23,14 @@ const HANKO: [number, number, number] = [198, 40, 40];
 const SECTION_FILL: [number, number, number] = [236, 230, 218];
 const TOTAL_FILL: [number, number, number] = [246, 242, 234];
 
-export function renderExamPdf(sheet: ExamSheet, generatedAt = new Date(), metadata = ''): Blob {
+export function renderExamPdf(
+  sheet: ExamSheet,
+  generatedAt = new Date(),
+  metadata = '',
+  logo?: string,
+): Blob {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  doc.setProperties({ title: pdfText(`${sheet.title} - Shiken Dojo`), creator: 'Shiken Dojo' });
+  doc.setProperties({ title: pdfText(`${sheet.title} - Ryu-kan`), creator: 'Ryu-kan' });
   // Dados da prova para a importação; não aparecem na folha impressa.
   if (metadata) doc.addMetadata(metadata);
 
@@ -38,7 +43,7 @@ export function renderExamPdf(sheet: ExamSheet, generatedAt = new Date(), metada
 
   pages.forEach((columnIndexes, pageIndex) => {
     if (pageIndex > 0) doc.addPage();
-    drawHeader(doc, sheet);
+    drawHeader(doc, sheet, logo);
     drawTable(doc, sheet, columnIndexes);
     drawFooter(doc, generatedAt, pageIndex + 1, pages.length);
   });
@@ -46,18 +51,13 @@ export function renderExamPdf(sheet: ExamSheet, generatedAt = new Date(), metada
   return doc.output('blob');
 }
 
-function drawHeader(doc: jsPDF, sheet: ExamSheet): void {
-  // Ensō com o sol vermelho, como no logotipo.
-  doc.setDrawColor(...INK);
-  doc.setLineWidth(0.9);
-  doc.circle(MARGIN + 5, MARGIN + 4, 5, 'S');
-  doc.setFillColor(...HANKO);
-  doc.circle(MARGIN + 5, MARGIN + 4, 2.6, 'F');
+function drawHeader(doc: jsPDF, sheet: ExamSheet, logo?: string): void {
+  if (logo) doc.addImage(logo, 'PNG', MARGIN, MARGIN - 1.5, 11, 11);
 
   doc.setTextColor(...INK);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(15);
-  doc.text('Shiken Dojo', MARGIN + 13, MARGIN + 3);
+  doc.text('Ryu-kan', MARGIN + 13, MARGIN + 3);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10.5);
   doc.text(pdfText(sheet.title), MARGIN + 13, MARGIN + 8.5);
@@ -199,7 +199,7 @@ function drawFooter(doc: jsPDF, generatedAt: Date, page: number, pageCount: numb
   doc.text('Assinatura do(a) examinador(a)', MARGIN, y + 3.5);
   doc.text('Data', MARGIN + 100, y + 3.5);
   doc.text(
-    `Gerado em ${format(generatedAt, 'dd/MM/yyyy HH:mm')} - Shiken Dojo - página ${page} de ${pageCount}`,
+    `Gerado em ${format(generatedAt, 'dd/MM/yyyy HH:mm')} - Ryu-kan - página ${page} de ${pageCount}`,
     PAGE_W - MARGIN,
     y + 3.5,
     { align: 'right' },

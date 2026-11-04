@@ -28,7 +28,7 @@ const NOT_RECOGNIZED = () =>
   new ApiError(
     422,
     'PDF_NOT_RECOGNIZED',
-    'Este arquivo não é um PDF gerado pelo Shiken Dojo, ou foi alterado depois de exportado.',
+    'Este arquivo não é um PDF gerado pelo Ryu-kan, ou foi alterado depois de exportado.',
   );
 
 @Injectable({ providedIn: 'root' })
@@ -42,9 +42,26 @@ export class ExamPdfService {
     const { encoded, metadata } = encodeExamPdfData(exam, variant, crypto.randomUUID());
     await this.examApi.registerPdfExport(await sha256Hex(encoded), exam.id, variant);
     return {
-      file: renderExamPdf(buildExamSheet(exam, variant), new Date(), metadata),
+      file: renderExamPdf(buildExamSheet(exam, variant), new Date(), metadata, await this.logo()),
       fileName: examPdfFileName(exam, variant),
     };
+  }
+
+  /** Sem a logo (ex.: sem internet e fora do cache), o PDF sai só com o nome. */
+  private async logo(): Promise<string | undefined> {
+    try {
+      const response = await fetch('logo-ryu-kan.png');
+      if (!response.ok) return undefined;
+      const blob = await response.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('logo'));
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return undefined;
+    }
   }
 
   async download(exam: Exam, variant: ExamPdfVariant): Promise<void> {

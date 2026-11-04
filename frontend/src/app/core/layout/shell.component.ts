@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,10 +8,11 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
+import { BackupService } from '@core/backup/backup.service';
 import { NotificationService } from '@core/notifications/notification.service';
 import { ApiError } from '@shared/models/api-error.model';
 import { TEACHER_ROLE_INFO } from '@shared/data-access/teachers/teacher.model';
-import { EnsoLogoComponent } from '@shared/ui/enso-logo.component';
+import { LogoComponent } from '@shared/ui/logo.component';
 import { InitialsAvatarComponent } from '@shared/ui/initials-avatar.component';
 import { filter, skip } from 'rxjs';
 import { ThemeService } from './theme.service';
@@ -35,7 +36,7 @@ interface NavLink {
     MatIconModule,
     MatMenuModule,
     MatTooltipModule,
-    EnsoLogoComponent,
+    LogoComponent,
     InitialsAvatarComponent,
   ],
   templateUrl: './shell.component.html',
@@ -46,9 +47,11 @@ export class ShellComponent {
   private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
   private readonly notifications = inject(NotificationService);
+  private readonly backup = inject(BackupService);
   protected readonly theme = inject(ThemeService);
   protected readonly auth = inject(AuthService);
   protected readonly roleInfo = TEACHER_ROLE_INFO;
+  protected readonly isBackingUp = signal(false);
 
   protected readonly links: readonly NavLink[] = [
     { path: '/', label: 'Início', shortLabel: 'Início', icon: 'temple_buddhist', exact: true },
@@ -75,6 +78,22 @@ export class ShellComponent {
       exact: false,
     },
   ];
+
+  protected downloadBackup(): void {
+    this.isBackingUp.set(true);
+    this.backup.download().subscribe({
+      next: () => {
+        this.isBackingUp.set(false);
+        this.notifications.success(
+          'Backup baixado. Guarde em um local seguro: o arquivo tem os dados dos alunos.',
+        );
+      },
+      error: (error: ApiError) => {
+        this.isBackingUp.set(false);
+        this.notifications.error(error.message);
+      },
+    });
+  }
 
   protected logout(): void {
     // Recarrega a página ao sair: nada da sessão anterior (listas, notas) fica na memória.
