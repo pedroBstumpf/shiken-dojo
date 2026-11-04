@@ -1,0 +1,24 @@
+/*
+ * Fontes servidas pelo próprio site, para o app abrir igual sem internet.
+ * Os ícones são os da fonte Material Symbols: sem ela, apareceriam como texto ("search").
+ */
+@import '@fontsource/material-symbols-outlined/400.css';
+@import '@fontsource-variable/inter/index.css';
+@import '@fontsource/shippori-mincho/500.css';
+@import '@fontsource/shippori-mincho/700.css';
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}

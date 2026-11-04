@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/index.html",
+          "/manifest.webmanifest",
+          "/*.js",
+          "/*.css",
+          "/*.png",
+          "/icons/*.png",
+          "/media/material-symbols-*",
+          "/media/inter-*",
+          "/media/shippori-mincho-latin-*"
+        ]
+      }
+    },
+    {
+      "name": "kanji",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": ["/media/**"]
+      }
+    }
+  ]
+}

@@ -17,8 +17,10 @@ import {
 } from 'firebase/auth';
 import {
   clearIndexedDbPersistence,
+  collection,
   doc,
   getDoc,
+  getDocs,
   serverTimestamp,
   terminate,
   updateDoc,
@@ -174,6 +176,15 @@ export class AuthService {
       },
     };
     this._session.set(session);
+    void this.keepOfflineCopy();
     return session;
+  }
+
+  /** Sem isso, uma tela nunca aberta com internet (ex.: Alunos) apareceria vazia quando offline. */
+  private async keepOfflineCopy(): Promise<void> {
+    if (!navigator.onLine) return;
+    await Promise.all(
+      ['students', 'teachers', 'exams'].map((name) => getDocs(collection(this.db, name))),
+    ).catch(() => undefined);
   }
 }

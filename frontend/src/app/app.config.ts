@@ -3,6 +3,7 @@ import localePt from '@angular/common/locales/pt';
 import {
   ApplicationConfig,
   inject,
+  isDevMode,
   LOCALE_ID,
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
@@ -18,6 +19,8 @@ import {
   withInMemoryScrolling,
 } from '@angular/router';
 import { PageTitleStrategy } from '@core/layout/page-title.strategy';
+import { AppUpdateService } from '@core/pwa/app-update.service';
+import { provideServiceWorker } from '@angular/service-worker';
 import { ptBR } from 'date-fns/locale';
 import { routes } from './app.routes';
 
@@ -47,8 +50,14 @@ export const appConfig: ApplicationConfig = {
       provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
       useValue: { appearance: 'outline', subscriptSizing: 'dynamic' },
     },
+    // Guarda o app no dispositivo para abrir sem internet. Só em builds de produção.
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerImmediately',
+    }),
     provideAppInitializer(() => {
       inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-outlined');
+      inject(AppUpdateService).start();
     }),
   ],
 };

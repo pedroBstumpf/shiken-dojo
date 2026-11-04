@@ -42,8 +42,14 @@ papel de responsável, o dojo nunca fica sem um.
 
 ### Dados no dispositivo
 
-O Firestore mantém uma cópia local (IndexedDB). Sem internet, o app continua funcionando e as
-gravações são enviadas quando a conexão volta. Ao **Sair**, a cópia é apagada; se ainda houver dados
+O app funciona sem internet depois do primeiro acesso com conexão. Um service worker guarda o site
+no aparelho, e o Firestore mantém uma cópia local dos dados (IndexedDB). As gravações são enviadas
+quando a conexão volta. Precisam de internet: entrar pela primeira vez, convidar professor, baixar
+backup e importar PDF.
+
+Quando há uma versão nova publicada, ela é baixada em segundo plano e o app oferece **Atualizar**,
+sem recarregar sozinho, para não interromper uma prova. Em iPhone, instale na tela de início: pelo
+Safari, o sistema pode apagar os dados de um site que fica dias sem uso. Ao **Sair**, a cópia é apagada; se ainda houver dados
 não enviados, o app avisa e não sai. O login fica salvo no dispositivo até o professor sair, então
 oriente a sempre usar **Sair** em aparelhos compartilhados.
 
@@ -141,6 +147,9 @@ npm run emulators       # em um terminal; painel em http://127.0.0.1:4000
 npm run emulators:seed  # dados de demonstração; a senha aparece na saída
 npm start               # http://localhost:4200
 ```
+
+O `npm start` não usa o service worker. Para testar o offline, use `npm run build:emulator` e sirva
+`dist/frontend/browser` com `firebase emulators:start --only auth,firestore,hosting`.
 
 Os e-mails não são enviados: os links aparecem no terminal dos emuladores e no painel, em
 **Authentication**. Os dados somem quando os emuladores param.

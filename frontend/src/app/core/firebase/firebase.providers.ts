@@ -4,11 +4,25 @@ import { FirebaseApp, initializeApp } from 'firebase/app';
 import { Auth, connectAuthEmulator, getAuth } from 'firebase/auth';
 import {
   connectFirestoreEmulator,
+  disableNetwork,
+  enableNetwork,
   Firestore,
   initializeFirestore,
   persistentLocalCache,
   persistentMultipleTabManager,
 } from 'firebase/firestore';
+
+/**
+ * Sozinho, o Firestore leva cerca de 10 segundos para concluir que está sem rede e, até lá, as
+ * leituras ficam presas. Avisando na hora, abrir o app offline mostra os dados imediatamente.
+ */
+function followNetworkStatus(db: Firestore): void {
+  // Depois do logout o Firestore já foi encerrado: não há mais o que atualizar.
+  const ignoreClosed = () => undefined;
+  if (!navigator.onLine) void disableNetwork(db).catch(ignoreClosed);
+  addEventListener('offline', () => void disableNetwork(db).catch(ignoreClosed));
+  addEventListener('online', () => void enableNetwork(db).catch(ignoreClosed));
+}
 
 export const AUTH_EMULATOR_URL = 'http://127.0.0.1:9099';
 const FIRESTORE_EMULATOR_HOST = '127.0.0.1';
@@ -42,6 +56,7 @@ export const FIRESTORE = new InjectionToken<Firestore>('FIRESTORE', {
     if (environment.useEmulators) {
       connectFirestoreEmulator(db, FIRESTORE_EMULATOR_HOST, FIRESTORE_EMULATOR_PORT);
     }
+    followNetworkStatus(db);
     return db;
   },
 });
