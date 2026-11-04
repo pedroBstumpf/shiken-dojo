@@ -1,5 +1,5 @@
 <sd-page-header
-  [title]="isEdit() ? 'Editar professor' : 'Cadastrar professor'"
+  [title]="isEdit() ? 'Editar professor' : 'Convidar professor'"
   kanji="師範"
   kanjiReading="shihan · mestre"
   description="Dados de contato, graduação e função no dojo."
@@ -40,7 +40,9 @@
             inputmode="email"
             maxlength="254"
           />
-          <mat-hint>Será usado para acessar o sistema</mat-hint>
+          <mat-hint>{{
+            isEdit() ? 'O e-mail de acesso não pode ser alterado' : 'O convite será enviado para cá'
+          }}</mat-hint>
           <mat-error>{{ form.controls.email.errors | fieldError }}</mat-error>
         </mat-form-field>
 
@@ -102,47 +104,55 @@
       </mat-form-field>
     </fieldset>
 
-    <fieldset>
-      <legend class="mb-4 text-lg font-semibold">Função no dojo</legend>
-      <mat-radio-group formControlName="role" class="grid gap-3 sm:grid-cols-2">
-        @for (option of roles; track option.role) {
-          <mat-radio-button
-            [value]="option.role"
-            class="rounded-xl border border-outline-variant p-3 transition-colors"
-            [class.border-primary]="form.controls.role.value === option.role"
-            [class.bg-primary-container]="form.controls.role.value === option.role"
-          >
-            <span class="flex flex-col gap-1 py-1">
-              <span class="font-semibold">{{ option.label }}</span>
-              <span class="text-sm text-on-surface-variant">{{ option.description }}</span>
-            </span>
-          </mat-radio-button>
-        }
-      </mat-radio-group>
-    </fieldset>
+    @if (canChooseRole()) {
+      <fieldset>
+        <legend class="mb-4 text-lg font-semibold">Função no dojo</legend>
+        <mat-radio-group formControlName="role" class="grid gap-3 sm:grid-cols-2">
+          @for (option of roles; track option.role) {
+            <mat-radio-button
+              [value]="option.role"
+              class="rounded-xl border border-outline-variant p-3 transition-colors"
+              [class.border-primary]="form.controls.role.value === option.role"
+              [class.bg-primary-container]="form.controls.role.value === option.role"
+            >
+              <span class="flex flex-col gap-1 py-1">
+                <span class="font-semibold">{{ option.label }}</span>
+                <span class="text-sm text-on-surface-variant">{{ option.description }}</span>
+              </span>
+            </mat-radio-button>
+          }
+        </mat-radio-group>
+      </fieldset>
+    }
 
-    <fieldset>
-      <legend class="mb-3 text-lg font-semibold">Situação</legend>
-      <mat-slide-toggle formControlName="active">Professor(a) ativo(a)</mat-slide-toggle>
-      <p class="mt-2 text-sm text-on-surface-variant">
-        Professores inativos continuam no histórico, mas não aparecem como examinadores em novas
-        provas.
+    @if (isEdit()) {
+      <fieldset>
+        <legend class="mb-3 text-lg font-semibold">Situação</legend>
+        <mat-slide-toggle formControlName="active">Professor(a) ativo(a)</mat-slide-toggle>
+        <p class="mt-2 text-sm text-on-surface-variant">
+          Professores inativos continuam no histórico, mas não aparecem como examinadores em novas
+          provas. Eles também perdem o acesso ao sistema.
+        </p>
+      </fieldset>
+    }
+
+    @if (!isEdit()) {
+      <p class="flex gap-3 rounded-xl bg-surface-low p-4 text-sm text-on-surface-variant">
+        <mat-icon class="shrink-0" aria-hidden="true">lock</mat-icon>
+        <span>
+          Ninguém cadastra a senha de outra pessoa: o professor receberá um e-mail com um link para
+          criar a própria senha.
+        </span>
       </p>
-    </fieldset>
-
-    <p class="flex gap-3 rounded-xl bg-surface-low p-4 text-sm text-on-surface-variant">
-      <mat-icon class="shrink-0" aria-hidden="true">lock</mat-icon>
-      <span>
-        Senhas não são cadastradas aqui. Quando o login estiver disponível, o professor receberá um
-        convite no e-mail informado para criar a própria senha.
-      </span>
-    </p>
+    }
 
     <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
       <a matButton routerLink="/teachers">Cancelar</a>
       <button matButton="filled" type="submit" [disabled]="isSaving()">
-        <mat-icon aria-hidden="true">{{ isSaving() ? 'hourglass_top' : 'save' }}</mat-icon>
-        {{ isSaving() ? 'Salvando…' : isEdit() ? 'Salvar alterações' : 'Cadastrar professor' }}
+        <mat-icon aria-hidden="true">{{
+          isSaving() ? 'hourglass_top' : isEdit() ? 'save' : 'forward_to_inbox'
+        }}</mat-icon>
+        {{ isSaving() ? 'Salvando…' : isEdit() ? 'Salvar alterações' : 'Enviar convite' }}
       </button>
     </div>
   </form>

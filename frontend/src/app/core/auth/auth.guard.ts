@@ -4,8 +4,8 @@ import { catchError, map, of } from 'rxjs';
 import { AuthService } from './auth.service';
 
 /**
- * Rotas que exigem login. Guard não é segurança (quem decide é a API); ele só evita mostrar
- * telas que responderiam 401 e leva o professor ao login, voltando depois para onde estava.
+ * Rotas que exigem login. Guard não é segurança (quem decide são as regras do Firestore); ele só
+ * evita mostrar telas sem permissão e leva o professor ao login, voltando depois para onde estava.
  */
 export const authGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
@@ -17,11 +17,11 @@ export const authGuard: CanActivateFn = (_route, state) => {
   );
 };
 
-/** Telas de gestão de professores: só o sensei responsável (a API também recusa, com 403). */
+/** Editar professores: só o sensei responsável (as regras do Firestore também recusam). */
 export const headInstructorGuard: CanActivateFn = () =>
   inject(AuthService).isHeadInstructor() ? true : inject(Router).createUrlTree(['/teachers']);
 
-/** Login e convite: quem já está logado vai direto para o início. */
+/** Login: quem já está logado vai direto para o início. */
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

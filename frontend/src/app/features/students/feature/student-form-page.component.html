@@ -44,37 +44,13 @@
         <mat-error>{{ form.controls.belt.errors | fieldError }}</mat-error>
       </mat-form-field>
 
-      <div class="grid gap-4 sm:grid-cols-2">
-        <mat-form-field>
-          <mat-label>Data de nascimento</mat-label>
-          <input matInput [matDatepicker]="birthPicker" formControlName="birthDate" [max]="today" />
-          <mat-hint>Opcional · dd/mm/aaaa</mat-hint>
-          <mat-datepicker-toggle matIconSuffix [for]="birthPicker" />
-          <mat-datepicker #birthPicker startView="multi-year" />
-          <mat-error>{{ form.controls.birthDate.errors | fieldError }}</mat-error>
-        </mat-form-field>
-
-        <mat-form-field>
-          <mat-label>Treina desde</mat-label>
-          <input
-            matInput
-            [matDatepicker]="enrollmentPicker"
-            formControlName="enrollmentDate"
-            [max]="today"
-          />
-          <mat-hint>Opcional · dd/mm/aaaa</mat-hint>
-          <mat-datepicker-toggle matIconSuffix [for]="enrollmentPicker" />
-          <mat-datepicker #enrollmentPicker />
-          <mat-error>{{ form.controls.enrollmentDate.errors | fieldError }}</mat-error>
-        </mat-form-field>
-      </div>
-
-      <mat-form-field class="w-full">
-        <mat-label>Observações</mat-label>
-        <textarea matInput formControlName="notes" rows="3" maxlength="500"></textarea>
-        <mat-hint>Opcional · Evite registrar dados de saúde ou documentos aqui.</mat-hint>
-        <mat-hint align="end">{{ form.controls.notes.value.length }}/500</mat-hint>
-        <mat-error>{{ form.controls.notes.errors | fieldError }}</mat-error>
+      <mat-form-field class="w-full sm:max-w-sm">
+        <mat-label>Data de nascimento</mat-label>
+        <input matInput [matDatepicker]="birthPicker" formControlName="birthDate" [max]="today" />
+        <mat-hint>Opcional · dd/mm/aaaa · a idade é calculada a partir dela</mat-hint>
+        <mat-datepicker-toggle matIconSuffix [for]="birthPicker" />
+        <mat-datepicker #birthPicker startView="multi-year" />
+        <mat-error>{{ form.controls.birthDate.errors | fieldError }}</mat-error>
       </mat-form-field>
     </fieldset>
 

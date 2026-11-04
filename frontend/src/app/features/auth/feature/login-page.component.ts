@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
+import { NotificationService } from '@core/notifications/notification.service';
 import { safeReturnUrl } from '@core/auth/return-url';
 import { ApiError } from '@shared/models/api-error.model';
 import { FieldErrorPipe } from '@shared/pipes/field-error.pipe';
@@ -29,11 +30,13 @@ export class LoginPageComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly fb = inject(NonNullableFormBuilder);
+  private readonly notifications = inject(NotificationService);
 
   /** Página que o professor tentou abrir antes do login (?returnUrl=). */
   readonly returnUrl = input<string>();
 
   protected readonly isSubmitting = signal(false);
+  protected readonly isSendingReset = signal(false);
   protected readonly showPassword = signal(false);
   protected readonly formError = signal<string | null>(null);
 
@@ -54,9 +57,33 @@ export class LoginPageComponent {
       next: () => void this.router.navigateByUrl(safeReturnUrl(this.returnUrl())),
       error: (error: ApiError) => {
         this.isSubmitting.set(false);
-        // Mensagem genérica do servidor ("E-mail ou senha incorretos."): não revela se a conta existe.
+        // Mensagem genérica ("E-mail ou senha incorretos."): não revela se a conta existe.
         this.formError.set(error.message);
         this.form.controls.password.reset();
+      },
+    });
+  }
+
+  /** Também serve para quem perdeu o prazo do link do convite. */
+  protected onForgotPassword(): void {
+    const email = this.form.controls.email;
+    if (email.invalid) {
+      email.markAsTouched();
+      this.formError.set('Informe seu e-mail acima para receber o link.');
+      return;
+    }
+    this.isSendingReset.set(true);
+    this.formError.set(null);
+    this.auth.sendPasswordReset(email.value).subscribe({
+      next: () => {
+        this.isSendingReset.set(false);
+        this.notifications.success(
+          'Se este e-mail estiver cadastrado, enviamos um link para definir a senha. Confira também o spam.',
+        );
+      },
+      error: (error: ApiError) => {
+        this.isSendingReset.set(false);
+        this.formError.set(error.message);
       },
     });
   }

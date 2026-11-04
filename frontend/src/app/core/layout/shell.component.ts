@@ -8,6 +8,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
+import { NotificationService } from '@core/notifications/notification.service';
+import { ApiError } from '@shared/models/api-error.model';
 import { TEACHER_ROLE_INFO } from '@shared/data-access/teachers/teacher.model';
 import { EnsoLogoComponent } from '@shared/ui/enso-logo.component';
 import { InitialsAvatarComponent } from '@shared/ui/initials-avatar.component';
@@ -43,6 +45,7 @@ interface NavLink {
 export class ShellComponent {
   private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
+  private readonly notifications = inject(NotificationService);
   protected readonly theme = inject(ThemeService);
   protected readonly auth = inject(AuthService);
   protected readonly roleInfo = TEACHER_ROLE_INFO;
@@ -75,8 +78,11 @@ export class ShellComponent {
 
   protected logout(): void {
     // Recarrega a página ao sair: nada da sessão anterior (listas, notas) fica na memória.
-    const leave = () => this.document.location.assign('/login');
-    this.auth.logout().subscribe({ complete: leave, error: leave });
+    this.auth.logout().subscribe({
+      complete: () => this.document.location.assign('/login'),
+      // Ex.: notas ainda não enviadas. Sair agora apagaria a cópia local e elas se perderiam.
+      error: (error: ApiError) => this.notifications.error(error.message),
+    });
   }
 
   constructor() {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
@@ -18,6 +18,7 @@ import { ExamSummaryCardComponent } from '@shared/ui/exam-summary-card.component
 import { PageHeaderComponent } from '@shared/ui/page-header.component';
 import { emptyIfMissing, normalizeForSearch } from '@shared/utils/text.utils';
 import { filter, switchMap } from 'rxjs';
+import { ExamPdfService } from '../data-access/exam-pdf.service';
 
 const STATUS_FILTERS: readonly { value: ExamStatus; label: string }[] = [
   { value: 'completed', label: 'Concluídas' },
@@ -46,12 +47,14 @@ export class ExamHistoryPageComponent {
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly notifications = inject(NotificationService);
+  private readonly pdf = inject(ExamPdfService);
 
   /** Filtros vindos da URL (?q=&status=). */
   readonly q = input('', { transform: emptyIfMissing });
   readonly status = input('', { transform: emptyIfMissing });
 
   protected readonly statusFilters = STATUS_FILTERS;
+  protected readonly isImporting = signal(false);
   protected readonly exams = rxResource({ stream: () => this.api.list() });
 
   protected readonly statusFilter = computed<ExamStatus | null>(() =>
@@ -87,6 +90,26 @@ export class ExamHistoryPageComponent {
 
   protected onNewExam(): void {
     void this.router.navigate(['/exams/new']);
+  }
+
+  /** Só aceita PDFs gerados por este app; a prova que já existe no sistema nunca é sobrescrita. */
+  protected async onImport(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // Permite escolher o mesmo arquivo de novo.
+    if (!file) return;
+    this.isImporting.set(true);
+    try {
+      const { examId, created } = await this.pdf.importFile(file);
+      this.notifications.success(
+        created ? 'Prova importada.' : 'Esta prova já está no sistema: nada foi alterado.',
+      );
+      void this.router.navigate(['/history', examId]);
+    } catch (error) {
+      this.notifications.error((error as ApiError).message);
+    } finally {
+      this.isImporting.set(false);
+    }
   }
 
   protected onDelete(exam: ExamSummary): void {

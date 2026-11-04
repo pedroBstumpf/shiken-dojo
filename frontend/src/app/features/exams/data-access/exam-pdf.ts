@@ -23,9 +23,11 @@ const HANKO: [number, number, number] = [198, 40, 40];
 const SECTION_FILL: [number, number, number] = [236, 230, 218];
 const TOTAL_FILL: [number, number, number] = [246, 242, 234];
 
-export function renderExamPdf(sheet: ExamSheet, generatedAt = new Date()): Blob {
+export function renderExamPdf(sheet: ExamSheet, generatedAt = new Date(), metadata = ''): Blob {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   doc.setProperties({ title: pdfText(`${sheet.title} - Shiken Dojo`), creator: 'Shiken Dojo' });
+  // Dados da prova para a importação; não aparecem na folha impressa.
+  if (metadata) doc.addMetadata(metadata);
 
   // Mais de 25 alunos: as colunas continuam na página seguinte, repetindo as técnicas.
   const pages = chunk(

@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,7 +11,6 @@ import { ageInYears } from '@shared/utils/date.utils';
 @Component({
   selector: 'sd-student-card',
   imports: [
-    DatePipe,
     RouterLink,
     MatButtonModule,
     MatIconModule,
@@ -40,12 +38,6 @@ import { ageInYears } from '@shared/utils/date.utils';
           <div>
             <dt class="sr-only">Idade</dt>
             <dd>{{ age() }} anos</dd>
-          </div>
-        }
-        @if (student().enrollmentDate; as enrollmentDate) {
-          <div>
-            <dt class="sr-only">Treina desde</dt>
-            <dd>Treina desde {{ enrollmentDate | date: 'MMM/yyyy' }}</dd>
           </div>
         }
       </dl>

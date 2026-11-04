@@ -1,15 +1,34 @@
+import { fromFirestoreDate } from '@shared/data-access/firestore-date';
 import { digitsOnly } from '@shared/utils/phone.utils';
-import { TeacherDto, TeacherWriteDto } from './teacher.dto';
+import { TeacherDoc, TeacherWriteDoc } from './teacher.dto';
 import { Teacher, TeacherInput } from './teacher.model';
 
-export function toTeacher(dto: TeacherDto): Teacher {
-  return { ...dto, createdAt: new Date(dto.createdAt), updatedAt: new Date(dto.updatedAt) };
+/** O e-mail é normalizado assim em todo lugar: é o identificador do cadastro. */
+export function teacherId(email: string): string {
+  return email.trim().toLowerCase();
 }
 
-export function toTeacherWriteDto(input: TeacherInput): TeacherWriteDto {
+export function toTeacher(id: string, data: TeacherDoc): Teacher {
+  const belt = data.belt ?? 'preta';
+  return {
+    id,
+    fullName: data.fullName,
+    email: id,
+    phone: data.phone ?? '',
+    role: data.role,
+    belt,
+    dan: data.dan ?? (belt === 'preta' ? 1 : null),
+    federationId: data.federationId ?? '',
+    active: data.active,
+    invitationPending: data.invitationPending ?? false,
+    createdAt: fromFirestoreDate(data.createdAt),
+    updatedAt: fromFirestoreDate(data.updatedAt),
+  };
+}
+
+export function toTeacherWriteDoc(input: TeacherInput): TeacherWriteDoc {
   return {
     fullName: input.fullName.trim(),
-    email: input.email.trim().toLowerCase(),
     phone: digitsOnly(input.phone),
     role: input.role,
     belt: input.belt,

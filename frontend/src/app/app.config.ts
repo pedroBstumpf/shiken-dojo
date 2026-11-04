@@ -1,10 +1,4 @@
 import { registerLocaleData } from '@angular/common';
-import {
-  provideHttpClient,
-  withFetch,
-  withInterceptors,
-  withXsrfConfiguration,
-} from '@angular/common/http';
 import localePt from '@angular/common/locales/pt';
 import {
   ApplicationConfig,
@@ -23,8 +17,6 @@ import {
   withComponentInputBinding,
   withInMemoryScrolling,
 } from '@angular/router';
-import { authInterceptor } from '@core/auth/auth.interceptor';
-import { errorInterceptor } from '@core/http/error.interceptor';
 import { PageTitleStrategy } from '@core/layout/page-title.strategy';
 import { ptBR } from 'date-fns/locale';
 import { routes } from './app.routes';
@@ -40,13 +32,6 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
     ),
     { provide: TitleStrategy, useClass: PageTitleStrategy },
-    provideHttpClient(
-      withFetch(),
-      // authInterceptor vem antes: recebe o erro já normalizado pelo errorInterceptor.
-      withInterceptors([authInterceptor, errorInterceptor]),
-      // Alinhado ao padrão anti-CSRF previsto no back-end (docs/BACKEND.md §8).
-      withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' }),
-    ),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
     { provide: MAT_DATE_LOCALE, useValue: ptBR },
     provideDateFnsAdapter({

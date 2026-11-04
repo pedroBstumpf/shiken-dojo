@@ -4,15 +4,11 @@ export interface Student {
   readonly id: string;
   readonly fullName: string;
   readonly belt: Belt;
+  /** A idade é calculada a partir daqui, assim não fica desatualizada. */
   readonly birthDate: Date | null;
-  readonly enrollmentDate: Date | null;
-  readonly notes: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
 
 /** Campos editáveis pelo professor. */
-export type StudentInput = Pick<
-  Student,
-  'fullName' | 'belt' | 'birthDate' | 'enrollmentDate' | 'notes'
->;
+export type StudentInput = Pick<Student, 'fullName' | 'belt' | 'birthDate'>;

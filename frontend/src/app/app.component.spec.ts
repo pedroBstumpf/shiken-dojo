@@ -1,4 +1,3 @@
-import { provideHttpClient } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -13,7 +12,6 @@ const SESSION: Session = {
     email: 'okada@dojo.exemplo',
     role: 'head_instructor',
   },
-  dojo: { id: 'dojo-001', name: 'Dojo Hien' },
 };
 
 async function render(session: Session | null): Promise<HTMLElement> {
@@ -22,7 +20,6 @@ async function render(session: Session | null): Promise<HTMLElement> {
     imports: [AppComponent],
     providers: [
       provideRouter([]),
-      provideHttpClient(),
       {
         provide: AuthService,
         useValue: { session: state, isAuthenticated: () => state() !== null },

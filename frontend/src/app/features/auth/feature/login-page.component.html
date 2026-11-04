@@ -63,9 +63,18 @@
     <button matButton="filled" type="submit" class="mt-4 w-full" [disabled]="isSubmitting()">
       {{ isSubmitting() ? 'Entrando…' : 'Entrar' }}
     </button>
+    <button
+      matButton
+      type="button"
+      class="mt-2 w-full"
+      [disabled]="isSendingReset()"
+      (click)="onForgotPassword()"
+    >
+      {{ isSendingReset() ? 'Enviando…' : 'Esqueci minha senha' }}
+    </button>
   </form>
 
   <p class="mt-4 max-w-sm text-center text-sm text-on-surface-variant">
-    Ainda não tem acesso? Peça um convite ao sensei responsável pelo dojo.
+    Ainda não tem acesso? Peça um convite a um professor do dojo.
   </p>
 </section>

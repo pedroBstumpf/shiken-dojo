@@ -76,8 +76,6 @@ export class StudentFormPageComponent implements CanLeave {
     fullName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
     belt: this.fb.control<Belt>('branca', Validators.required),
     birthDate: this.fb.control<Date | null>(null, notInFutureValidator()),
-    enrollmentDate: this.fb.control<Date | null>(null, notInFutureValidator()),
-    notes: ['', Validators.maxLength(500)],
   });
 
   constructor() {
@@ -88,8 +86,6 @@ export class StudentFormPageComponent implements CanLeave {
           fullName: student.fullName,
           belt: student.belt,
           birthDate: student.birthDate,
-          enrollmentDate: student.enrollmentDate,
-          notes: student.notes,
         });
       }
     });

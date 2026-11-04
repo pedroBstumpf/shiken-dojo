@@ -1,5 +1,8 @@
 # Shiken Dojo — Back-end
 
+> **Fora de uso.** O app agora usa o Firebase ([docs/FIREBASE.md](../docs/FIREBASE.md)) e não depende
+> desta API, que fica guardada para o caso de ser necessária no futuro.
+
 Node.js 24 · TypeScript (strict) · Fastify 5 · Zod 4 · PostgreSQL 18 · Vitest
 
 API REST em `/api/v1` consumida pelo front-end Angular. Decisões de stack em

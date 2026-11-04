@@ -4,12 +4,10 @@
   kanjiReading="sensei"
   description="Quem ensina no dojo e pode ser examinador nas provas de faixa."
 >
-  @if (auth.isHeadInstructor()) {
-    <a actions matButton="filled" routerLink="/teachers/new">
-      <mat-icon aria-hidden="true">person_add</mat-icon>
-      Cadastrar professor
-    </a>
-  }
+  <a actions matButton="filled" routerLink="/teachers/new">
+    <mat-icon aria-hidden="true">person_add</mat-icon>
+    Convidar professor
+  </a>
 </sd-page-header>
 
 @if (store.error(); as error) {
@@ -27,8 +25,8 @@
 } @else if (store.teachers().length === 0) {
   <sd-empty-state
     title="Nenhum professor cadastrado"
-    description="Cadastre os professores do dojo. Eles aparecem como examinadores ao aplicar uma prova."
-    [actionLabel]="auth.isHeadInstructor() ? 'Cadastrar primeiro professor' : ''"
+    description="Convide os professores do dojo. Eles aparecem como examinadores ao aplicar uma prova."
+    actionLabel="Convidar professor"
     actionIcon="person_add"
     (action)="onCreate()"
   />
@@ -62,6 +60,7 @@
           <sd-teacher-card
             [teacher]="teacher"
             [canManage]="auth.isHeadInstructor()"
+            [isSelf]="teacher.id === auth.session()?.teacher?.id"
             (removed)="store.remove($event)"
             (invitationResent)="store.resendInvitation($event)"
           />

@@ -109,10 +109,12 @@ import { formatPhone } from '@shared/utils/phone.utils';
             Reenviar convite
           </button>
         }
-        <button mat-menu-item type="button" (click)="removed.emit(teacher())">
-          <mat-icon aria-hidden="true">delete</mat-icon>
-          Excluir
-        </button>
+        @if (!isSelf()) {
+          <button mat-menu-item type="button" (click)="removed.emit(teacher())">
+            <mat-icon aria-hidden="true">delete</mat-icon>
+            Excluir
+          </button>
+        }
       </mat-menu>
     }
   `,
@@ -121,6 +123,8 @@ export class TeacherCardComponent {
   readonly teacher = input.required<Teacher>();
   /** Só o sensei responsável edita, exclui e reenvia convites. */
   readonly canManage = input(false);
+  /** Ninguém exclui o próprio cadastro: o dojo nunca fica sem um sensei responsável. */
+  readonly isSelf = input(false);
 
   readonly removed = output<Teacher>();
   readonly invitationResent = output<Teacher>();

@@ -19,8 +19,12 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '@core/auth/auth.service';
 import { NotificationService } from '@core/notifications/notification.service';
-import { TeacherApiService } from '@shared/data-access/teachers/teacher-api.service';
+import {
+  INVITATION_EMAIL_FAILED,
+  TeacherApiService,
+} from '@shared/data-access/teachers/teacher-api.service';
 import {
   DAN_LEVELS,
   formatDan,
@@ -68,11 +72,16 @@ export class TeacherFormPageComponent implements CanLeave {
   private readonly notifications = inject(NotificationService);
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly document = inject(DOCUMENT);
+  private readonly auth = inject(AuthService);
 
   /** Vem da rota (:id) — ausente ao cadastrar. */
   readonly id = input<string>();
 
   protected readonly isEdit = computed(() => this.id() !== undefined);
+  /** Quem não é sensei responsável só convida instrutores (as regras do Firestore também exigem). */
+  protected readonly canChooseRole = this.auth.isHeadInstructor;
+  /** O sensei responsável não muda o próprio papel nem se desativa. */
+  protected readonly isSelf = computed(() => this.id() === this.auth.session()?.teacher.id);
   protected readonly isSaving = signal(false);
   protected readonly belts = BELTS.map((belt) => ({ belt, label: BELT_INFO[belt].label }));
   protected readonly danOptions = DAN_LEVELS.map((dan) => ({ dan, label: formatDan(dan) }));
@@ -104,6 +113,15 @@ export class TeacherFormPageComponent implements CanLeave {
       } else {
         dan.setValue(null);
         dan.disable({ emitEvent: false });
+      }
+    });
+
+    // O e-mail é o identificador do login: não muda depois do convite.
+    effect(() => {
+      if (this.isEdit()) this.form.controls.email.disable();
+      if (this.isSelf()) {
+        this.form.controls.role.disable();
+        this.form.controls.active.disable();
       }
     });
 
@@ -171,12 +189,19 @@ export class TeacherFormPageComponent implements CanLeave {
         this.notifications.success(
           this.isEdit()
             ? 'Cadastro atualizado.'
-            : `${teacher.fullName} foi cadastrado(a). O convite de acesso foi enviado para ${teacher.email}.`,
+            : `Convite enviado para ${teacher.email}. O link vale por tempo limitado; depois, basta usar "Esqueci minha senha" no login.`,
         );
         void this.router.navigate(['/teachers']);
       },
       error: (error: ApiError) => {
         this.isSaving.set(false);
+        if (error.code === INVITATION_EMAIL_FAILED) {
+          // O cadastro existe: repetir daria "e-mail já cadastrado".
+          this.form.markAsPristine();
+          this.notifications.error(error.message);
+          void this.router.navigate(['/teachers']);
+          return;
+        }
         this.applyServerErrors(error);
       },
     });

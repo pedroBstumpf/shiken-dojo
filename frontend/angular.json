@@ -72,8 +72,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "900kB",
-                  "maximumError": "1.5MB"
+                  "maximumWarning": "1.6MB",
+                  "maximumError": "2MB"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -81,7 +81,12 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "fonts": { "inline": false },
+                "styles": { "minify": true, "inlineCritical": false }
+              }
             },
             "development": {
               "optimization": false,
@@ -100,7 +105,6 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "proxyConfig": "proxy.conf.json"
           },
           "configurations": {
             "production": {

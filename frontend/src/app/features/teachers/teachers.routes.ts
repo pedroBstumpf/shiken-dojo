@@ -11,8 +11,7 @@ export const TEACHERS_ROUTES: Routes = [
   },
   {
     path: 'new',
-    title: 'Cadastrar professor',
-    canActivate: [headInstructorGuard],
+    title: 'Convidar professor',
     canDeactivate: [canLeaveGuard],
     loadComponent: () =>
       import('./feature/teacher-form-page.component').then((m) => m.TeacherFormPageComponent),

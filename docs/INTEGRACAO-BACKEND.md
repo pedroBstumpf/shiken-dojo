@@ -1,5 +1,7 @@
 # Integração Front-end ↔ Back-end
 
+> **Histórico.** O front-end não usa mais esta API: veja [FIREBASE.md](./FIREBASE.md).
+
 > Contrato entre o front-end ([frontend/](../frontend/)) e a API ([backend/](../backend/)), e os
 > cuidados de segurança e privacidade específicos do Shiken Dojo.
 > Complementa o [BACKEND.md](./BACKEND.md) (regras gerais) e o [FRONTEND.md](./FRONTEND.md).

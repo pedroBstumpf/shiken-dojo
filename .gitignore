@@ -5,6 +5,10 @@ dist/
 .angular/
 coverage/
 
+# Firebase: registros e cache locais.
+.firebase/
+*-debug.log
+
 # Segredos e banco de desenvolvimento: nunca versionar.
 .env
 .env.*

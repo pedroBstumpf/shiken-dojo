@@ -49,7 +49,6 @@ export interface Exam {
   readonly sections: readonly ExamSection[];
   readonly date: Date;
   readonly location: string;
-  /** null se o professor examinador foi excluído. */
   readonly examinerId: string | null;
   /** Retrato do nome do examinador no dia da prova. */
   readonly examinerName: string;
@@ -79,21 +78,6 @@ export interface ExamSummary {
 
 /** "filled": com as notas lançadas (o que falta fica em branco); "blank": folha vazia para preencher à mão. */
 export type ExamPdfVariant = 'filled' | 'blank';
-
-export interface ExamEmailRequest {
-  /** O PDF só pode ir para o e-mail de um professor cadastrado — nunca para um endereço livre. */
-  readonly teacherId: string;
-  readonly variant: ExamPdfVariant;
-  readonly file: Blob;
-  readonly fileName: string;
-}
-
-export interface EmailDelivery {
-  readonly recipientEmail: string;
-  readonly sentAt: Date;
-  /** true enquanto não há servidor de e-mail (API simulada): nada foi enviado de fato. */
-  readonly simulated: boolean;
-}
 
 export interface ExamSetup {
   readonly templateId: string;

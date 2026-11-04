@@ -4,6 +4,26 @@
   kanjiReading="kiroku"
   description="Todas as provas aplicadas, com as notas e o resultado de cada aluno."
 >
+  <input
+    actions
+    #pdfFile
+    type="file"
+    accept="application/pdf,.pdf"
+    class="hidden"
+    aria-label="Arquivo PDF da prova"
+    data-testid="import-pdf"
+    (change)="onImport($event)"
+  />
+  <button
+    actions
+    matButton="outlined"
+    type="button"
+    [disabled]="isImporting()"
+    (click)="pdfFile.click()"
+  >
+    <mat-icon aria-hidden="true">{{ isImporting() ? 'hourglass_top' : 'upload_file' }}</mat-icon>
+    {{ isImporting() ? 'Importando…' : 'Importar PDF' }}
+  </button>
   <a actions matButton="filled" routerLink="/exams/new">
     <mat-icon aria-hidden="true">sports_martial_arts</mat-icon>
     Aplicar nova prova
