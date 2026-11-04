@@ -72,7 +72,9 @@ export class ConfigError extends Error {
 }
 
 export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
-  const result = envSchema.safeParse(source);
+  // `CHAVE=` no .env (como no .env.example) significa "não informado": vale o valor padrão.
+  const informed = Object.fromEntries(Object.entries(source).filter(([, value]) => value !== ''));
+  const result = envSchema.safeParse(informed);
   if (!result.success) {
     // Mostra só o nome da variável e o problema, nunca o valor (pode ser um segredo).
     throw new ConfigError(

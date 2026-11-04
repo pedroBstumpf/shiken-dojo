@@ -44,4 +44,14 @@ describe('loadConfig', () => {
   it('exige a conexão com o banco', () => {
     expect(() => loadConfig({})).toThrow(/DATABASE_URL/);
   });
+
+  it('trata variáveis vazias do .env.example como não informadas', () => {
+    const config = loadConfig({ ...REQUIRED, COOKIE_SECURE: '', SMTP_URL: '', PORT: '' });
+    expect(config).toMatchObject({ cookieSecure: false, port: 3000 });
+  });
+
+  it('variável obrigatória vazia continua sendo recusada', () => {
+    expect(() => loadConfig({ ...REQUIRED, CSRF_SECRET: '' })).toThrow(/CSRF_SECRET/);
+    expect(() => loadConfig({ ...REQUIRED, DATABASE_URL: '' })).toThrow(/DATABASE_URL/);
+  });
 });
