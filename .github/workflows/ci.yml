@@ -1,10 +1,8 @@
-# Pipeline de cada PR e push (docs/BACKEND.md §20): lint, tipos, testes, build e dependências.
+# Pipeline de cada push, em qualquer branch: lint, tipos, testes, build e dependências.
 name: CI
 
 on:
   push:
-    branches: [main, dev]
-  pull_request:
 
 permissions:
   contents: read
@@ -78,5 +76,12 @@ jobs:
       - run: npm run lint
       - run: npm test -- --watch=false
       - run: npm run build
+      # O emulador do Firestore precisa de Java.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Regras de segurança do Firestore
+        run: npm run test:rules
       - name: Dependências sem vulnerabilidades altas ou críticas
         run: npm audit --omit=dev --audit-level=high
