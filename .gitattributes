@@ -1,0 +1,2 @@
+# Sempre LF, em qualquer sistema: o Prettier e o CI (Linux) esperam LF.
+* text=auto eol=lf

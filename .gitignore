@@ -1,0 +1,12 @@
+# Arquivos locais gerados, ignorados em todo o repositório.
+# Fica na raiz para continuar valendo em qualquer branch, mesmo sem a pasta do app.
+node_modules/
+dist/
+.angular/
+coverage/
+
+# Segredos e banco de desenvolvimento: nunca versionar.
+.env
+.env.*
+!.env.example
+.local/
