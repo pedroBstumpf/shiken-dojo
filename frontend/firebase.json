@@ -129,13 +129,22 @@
     },
     {
       "site": "shiken-dojo",
-      "public": "dist/frontend/browser",
-      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-      "redirects": [
+      "public": "hosting-redirect",
+      "rewrites": [
         {
-          "source": "/:path*",
-          "destination": "https://ryu-kan.web.app/:path*",
-          "type": 302
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "headers": [
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
         }
       ]
     }
